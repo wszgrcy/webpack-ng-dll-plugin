@@ -1,0 +1,27 @@
+{
+  "name": "webpack-ng-dll-plugin",
+  "version": "1.0.0",
+  "description": "ng版本可用的dll插件,路子比较野",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wszgrcy/webpack-ng-dll-plugin.git"
+  },
+  "author": "wszgrcy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wszgrcy/webpack-ng-dll-plugin/issues"
+  },
+  "homepage": "https://github.com/wszgrcy/webpack-ng-dll-plugin#readme",
+  "devDependencies": {
+    "@types/webpack": "^4.41.22"
+  },
+  "dependencies": {
+    "webpack": "^4.44.2"
+  }
+}
