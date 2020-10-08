@@ -18,10 +18,8 @@
     "url": "https://github.com/wszgrcy/webpack-ng-dll-plugin/issues"
   },
   "homepage": "https://github.com/wszgrcy/webpack-ng-dll-plugin#readme",
-  "devDependencies": {
+  "peerDependencies": {
+    "webpack": "^4.44.2",
     "@types/webpack": "^4.41.22"
-  },
-  "dependencies": {
-    "webpack": "^4.44.2"
   }
 }

@@ -57,7 +57,6 @@ class NgFilterPlugin {
     constructor(options = { mode: 'full' }) {
         this.options = options;
         this.explanation = 'NgFilterPlugin';
-        // this.options.mode = this.options.mode || 'full';
         if (this.options.mode === 'manual') {
             if (this.options.map) {
                 this.unCompressMap = new Map(Object.entries(this.options.map));
@@ -126,13 +125,6 @@ class NgFilterPlugin {
             });
         });
     }
-    /**
-     * 查找模块中引用.不压缩名字的
-     *
-     * @author cyia
-     * @date 2020-10-08
-     * @param module
-     */
     setUnCompressMap(module) {
         if (!/node_modules/.test(module.context || '') && module.dependencies) {
             if (module.dependencies && module.dependencies.length) {
@@ -196,7 +188,6 @@ class LibManifestPlugin {
                         return obj;
                     }, Object.create(null)),
                 };
-                // Apply formatting to content if format flag is true;
                 const manifestContent = this.options.format
                     ? JSON.stringify(manifest, null, 2)
                     : JSON.stringify(manifest);
