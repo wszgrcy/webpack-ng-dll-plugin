@@ -67,13 +67,11 @@ class NgFilterPlugin {
         }
     }
     apply(compiler) {
-        compiler.hooks.compilation.tap('NgFilterPlugin', (compilation) => {
+        compiler.hooks.thisCompilation.tap('NgFilterPlugin', (compilation) => {
             const hooks = compilation.mainTemplate.hooks;
             hooks.modules.tap('NgFilterPlugin', (e, chunk) => {
                 for (const module of chunk.modulesIterable) {
-                    if ((!module.context.includes('node_modules') &&
-                        module.rawRequest &&
-                        !module.rawRequest.endsWith('.scss')) ||
+                    if ((!module.context.includes('node_modules') && module.rawRequest) ||
                         (module.context || '').includes('$$_lazy_route_resource')) {
                         chunk.modulesIterable.delete(module);
                     }
@@ -130,7 +128,7 @@ class NgFilterPlugin {
             if (module.dependencies && module.dependencies.length) {
                 module.dependencies.forEach((dependency) => {
                     if (dependency.request &&
-                        /(^(@angular(\/|\\)(core|common|router|platform-browser))$)|rxjs/.test(dependency.request) &&
+                        /(^(@angular(\/|\\)(core|common|router|platform-browser|forms))$)|rxjs/.test(dependency.request) &&
                         dependency.id) {
                         const list = this.unCompressMap.get(dependency.request) || [];
                         if (!list.includes(dependency.id)) {

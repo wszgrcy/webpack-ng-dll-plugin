@@ -64,7 +64,7 @@ class NgFilterPlugin {
   }
 
   apply(compiler: webpack.Compiler) {
-    compiler.hooks.compilation.tap('NgFilterPlugin', (compilation) => {
+    compiler.hooks.thisCompilation.tap('NgFilterPlugin', (compilation) => {
       const hooks: {
         modules: SyncWaterfallHook<string, webpack.compilation.Chunk>;
       } = compilation.mainTemplate.hooks as any;
@@ -73,9 +73,7 @@ class NgFilterPlugin {
           NormalModule
         >) {
           if (
-            (!module.context.includes('node_modules') &&
-              module.rawRequest &&
-              !module.rawRequest.endsWith('.scss')) ||
+            (!module.context.includes('node_modules') && module.rawRequest) ||
             (module.context || '').includes('$$_lazy_route_resource')
           ) {
             chunk.modulesIterable.delete(module);
@@ -154,7 +152,7 @@ class NgFilterPlugin {
         module.dependencies.forEach((dependency) => {
           if (
             dependency.request &&
-            /(^(@angular(\/|\\)(core|common|router|platform-browser))$)|rxjs/.test(
+            /(^(@angular(\/|\\)(core|common|router|platform-browser|forms))$)|rxjs/.test(
               dependency.request
             ) &&
             dependency.id

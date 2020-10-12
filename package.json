@@ -1,12 +1,13 @@
 {
   "name": "webpack-ng-dll-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ng版本可用的dll插件,路子比较野",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc"
+    "build": "tsc",
+    "postbuild": "tsc ./src/module.template.ts -t ES5 --outDir ./dist"
   },
   "repository": {
     "type": "git",

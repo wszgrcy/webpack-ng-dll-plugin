@@ -1,0 +1,1 @@
+{"version":3,"file":"LoadModuleMainTemplatePlugin.d.ts","sourceRoot":"","sources":["../src/LoadModuleMainTemplatePlugin.ts"],"names":[],"mappings":"AAAA,OAAO,OAAO,MAAM,SAAS,CAAC;AAI9B,qBAAa,8BAA8B;IACzC,aAAa,SAAmC;;IAEhD,KAAK,CAAC,QAAQ,EAAE,OAAO,CAAC,QAAQ,GAAG,IAAI;IAQvC,GAAG,CAAC,WAAW,EAAE,OAAO,CAAC,WAAW,CAAC,WAAW,GAAG,IAAI;CA+BxD"}
