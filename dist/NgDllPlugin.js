@@ -57,6 +57,7 @@ class NgFilterPlugin {
     constructor(options = { mode: 'full' }) {
         this.options = options;
         this.explanation = 'NgFilterPlugin';
+        this.unCompressMap = new Map();
         if (this.options.mode === 'manual') {
             if (this.options.map) {
                 this.unCompressMap = new Map(Object.entries(this.options.map));
@@ -79,17 +80,20 @@ class NgFilterPlugin {
                 return e;
             });
             compilation.hooks.optimizeDependencies.tap('NgFilterPlugin', (modules) => {
-                this.unCompressMap = new Map();
                 for (const module of modules) {
                     switch (this.options.mode) {
                         case 'full':
-                            module.used = true;
+                            Object.defineProperty(module, 'used', {
+                                get() {
+                                    return true;
+                                },
+                                set() { },
+                            });
                             module.usedExports = true;
                             module.addReason(null, null, this.explanation);
                             break;
                         case 'auto':
-                            if (module.rawRequest &&
-                                this.unCompressMap.has(module.rawRequest)) {
+                            if (module.rawRequest && this.unCompressMap.has(module.rawRequest)) {
                                 const oldIsUsed = module.isUsed;
                                 const unCompressList = this.unCompressMap.get(module.rawRequest);
                                 module.isUsed = function (name) {
@@ -103,8 +107,7 @@ class NgFilterPlugin {
                             this.setUnCompressMap(module);
                             break;
                         case 'manual':
-                            if (module.rawRequest &&
-                                this.unCompressMap.has(module.rawRequest)) {
+                            if (module.rawRequest && this.unCompressMap.has(module.rawRequest)) {
                                 const oldIsUsed = module.isUsed;
                                 const unCompressList = this.unCompressMap.get(module.rawRequest);
                                 module.isUsed = function (name) {
@@ -186,9 +189,7 @@ class LibManifestPlugin {
                         return obj;
                     }, Object.create(null)),
                 };
-                const manifestContent = this.options.format
-                    ? JSON.stringify(manifest, null, 2)
-                    : JSON.stringify(manifest);
+                const manifestContent = this.options.format ? JSON.stringify(manifest, null, 2) : JSON.stringify(manifest);
                 const content = Buffer.from(manifestContent, 'utf8');
                 compiler.outputFileSystem.mkdirp(path.dirname(targetPath), (err) => {
                     if (err) {
