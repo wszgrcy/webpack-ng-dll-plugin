@@ -14,3 +14,4 @@ __exportStar(require("./helper"), exports);
 __exportStar(require("./NgDllPlugin"), exports);
 __exportStar(require("./RemoteModuleStartupPlugin"), exports);
 __exportStar(require("./LoadModuleMainTemplatePlugin"), exports);
+__exportStar(require("./NgRedirectModulePlugin"), exports);
