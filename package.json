@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "build": "tsc",
     "postbuild": "tsc ./src/module.template.ts -t ES5 --outDir ./dist"
   },
@@ -20,7 +20,36 @@
   },
   "homepage": "https://github.com/wszgrcy/webpack-ng-dll-plugin#readme",
   "peerDependencies": {
-    "webpack": "^4.44.2",
-    "@types/webpack": "^4.41.22"
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "cyia-code-util": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.22",
+    "@types/loader-runner": "^2.2.3",
+    "@types/webpack": "^4.41.22",
+    "jest": "^26.6.3",
+    "loader-runner": "^4.2.0",
+    "ts-jest": "^26.5.4",
+    "typescript": "^4.2.4",
+    "webpack": "^4.44.2"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
   }
 }
