@@ -11,18 +11,28 @@ const asString = (buf) => {
   return buf;
 };
 
-export class NgRedirectModule extends NormalModule {
+export class NgNamedImportModule extends NormalModule {
+  /**
+   *
+   * @param options
+   * @param globalNamespace todo 未来可能考虑多层级时使用
+   *
+   */
   constructor(private options, private globalNamespace: string) {
     super(options);
   }
 
   createSource(source: string, resourceBuffer: Buffer, sourceMap) {
-    source = this.options.dependencies
-      .map((item) => item.id)
-      .filter((item: string) => item)
+    source = Array.from(
+      new Set(
+        this.options.dependencies
+          .map((item) => item.id)
+          .filter((item: string) => item)
+      )
+    )
       .map(
         (item: string) =>
-          `export const ${item} = window.${[this.globalNamespace,item].filter(Boolean).join('.')};`
+          `export const ${item} = window.importNgNamed('${item}');`
       )
       .join('\n');
     // if there is no identifier return raw source

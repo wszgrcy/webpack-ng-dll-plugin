@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NgRedirectModule = void 0;
+exports.NgNamedImportModule = void 0;
 const NormalModule = require('webpack/lib/NormalModule');
 const { LineToLineMappedSource, OriginalSource, RawSource, } = require('webpack-sources');
 const asString = (buf) => {
@@ -9,17 +9,17 @@ const asString = (buf) => {
     }
     return buf;
 };
-class NgRedirectModule extends NormalModule {
+class NgNamedImportModule extends NormalModule {
     constructor(options, globalNamespace) {
         super(options);
         this.options = options;
         this.globalNamespace = globalNamespace;
     }
     createSource(source, resourceBuffer, sourceMap) {
-        source = this.options.dependencies
+        source = Array.from(new Set(this.options.dependencies
             .map((item) => item.id)
-            .filter((item) => item)
-            .map((item) => `export const ${item} = window.${[this.globalNamespace, item].filter(Boolean).join('.')};`)
+            .filter((item) => item)))
+            .map((item) => `export const ${item} = window.importNgNamed('${item}');`)
             .join('\n');
         if (!this.identifier) {
             return new RawSource(source);
@@ -37,4 +37,5 @@ class NgRedirectModule extends NormalModule {
         return new OriginalSource(source, identifier);
     }
 }
-exports.NgRedirectModule = NgRedirectModule;
+exports.NgNamedImportModule = NgNamedImportModule;
+//# sourceMappingURL=NgNamedImportModule.js.map

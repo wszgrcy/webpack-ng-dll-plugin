@@ -32,3 +32,4 @@ function cleanOutputFile(config, option, angularOptions) {
     }
 }
 exports.cleanOutputFile = cleanOutputFile;
+//# sourceMappingURL=helper.js.map

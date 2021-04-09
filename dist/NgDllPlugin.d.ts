@@ -16,4 +16,3 @@ interface NgFilterPluginOptions {
     };
 }
 export {};
-//# sourceMappingURL=NgDllPlugin.d.ts.map

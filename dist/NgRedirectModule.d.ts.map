@@ -1,1 +1,0 @@
-{"version":3,"file":"NgRedirectModule.d.ts","sourceRoot":"","sources":["../src/NgRedirectModule.ts"],"names":[],"mappings":";AAAA,QAAA,MAAM,YAAY,KAAsC,CAAC;AAazD,qBAAa,gBAAiB,SAAQ,YAAY;IACpC,OAAO,CAAC,OAAO;IAAE,OAAO,CAAC,eAAe;gBAAhC,OAAO,KAAA,EAAU,eAAe,EAAE,MAAM;IAI5D,YAAY,CAAC,MAAM,EAAE,MAAM,EAAE,cAAc,EAAE,MAAM,EAAE,SAAS,KAAA;CAqC/D"}

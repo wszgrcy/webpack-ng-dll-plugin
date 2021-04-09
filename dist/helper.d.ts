@@ -9,4 +9,3 @@ export declare function cleanOutputFile(config: webpack.Configuration, option: {
     index: boolean;
     runtimeChunk: boolean;
 }, angularOptions?: any): void;
-//# sourceMappingURL=helper.d.ts.map

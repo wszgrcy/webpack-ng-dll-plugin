@@ -7,11 +7,14 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     o[k2] = m[k];
 }));
 var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./helper"), exports);
 __exportStar(require("./NgDllPlugin"), exports);
 __exportStar(require("./RemoteModuleStartupPlugin"), exports);
 __exportStar(require("./LoadModuleMainTemplatePlugin"), exports);
-__exportStar(require("./NgRedirectModulePlugin"), exports);
+__exportStar(require("./NgNamedImportPlugin"), exports);
+__exportStar(require("./NgNamedPlugin"), exports);
+__exportStar(require("./loader/ng-named-export"), exports);
+//# sourceMappingURL=index.js.map
