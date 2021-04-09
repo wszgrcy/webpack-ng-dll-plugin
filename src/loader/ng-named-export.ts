@@ -28,26 +28,27 @@ export default function (this: webpack.loader.LoaderContext, data: string) {
   let selector = createCssSelectorForTs(sf);
   let list = ((selector.queryAll(
     'ImportDeclaration'
-  ) as any) as ts.ImportDeclaration[]).filter((item) =>
-    ts.isNamedImports(item.importClause.namedBindings)
+  ) as any) as ts.ImportDeclaration[]).filter(
+    (item) =>
+      item.importClause && ts.isNamedImports(item.importClause.namedBindings)
   );
   let pathList = [];
   let exportNamedList: string[] = [];
   for (let i = 0; i < list.length; i++) {
     const importDeclaration = list[i];
     pathList.push(
-      getAbsolutePath(importDeclaration.moduleSpecifier.getText()).then(
-        (item: string) => {
-          if (!item.includes('node_modules')) {
-            exportNamedList.push(
-              ...(importDeclaration.importClause
-                .namedBindings as ts.NamedImports).elements.map(
-                (item) => item.name.text
-              )
-            );
-          }
+      getAbsolutePath(
+        (importDeclaration.moduleSpecifier as ts.StringLiteral).text
+      ).then((item: string) => {
+        if (!item.includes('node_modules')) {
+          exportNamedList.push(
+            ...(importDeclaration.importClause
+              .namedBindings as ts.NamedImports).elements.map(
+              (item) => item.name.text
+            )
+          );
         }
-      )
+      })
     );
   }
   Promise.all(pathList).then(() => {

@@ -16,10 +16,10 @@ class NgNamedImportModule extends NormalModule {
         this.globalNamespace = globalNamespace;
     }
     createSource(source, resourceBuffer, sourceMap) {
-        source = this.options.dependencies
+        source = Array.from(new Set(this.options.dependencies
             .map((item) => item.id)
-            .filter((item) => item)
-            .map((item) => `window.importNgNamed('${item}');`)
+            .filter((item) => item)))
+            .map((item) => `export const ${item} = window.importNgNamed('${item}');`)
             .join('\n');
         if (!this.identifier) {
             return new RawSource(source);

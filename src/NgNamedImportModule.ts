@@ -23,10 +23,17 @@ export class NgNamedImportModule extends NormalModule {
   }
 
   createSource(source: string, resourceBuffer: Buffer, sourceMap) {
-    source = this.options.dependencies
-      .map((item) => item.id)
-      .filter((item: string) => item)
-      .map((item: string) => `window.importNgNamed('${item}');`)
+    source = Array.from(
+      new Set(
+        this.options.dependencies
+          .map((item) => item.id)
+          .filter((item: string) => item)
+      )
+    )
+      .map(
+        (item: string) =>
+          `export const ${item} = window.importNgNamed('${item}');`
+      )
       .join('\n');
     // if there is no identifier return raw source
     if (!this.identifier) {

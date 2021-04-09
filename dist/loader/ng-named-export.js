@@ -38,12 +38,12 @@ function default_1(data) {
     }
     let sf = ts.createSourceFile(this.resourcePath, data, ts.ScriptTarget.ESNext, true);
     let selector = cyia_code_util_1.createCssSelectorForTs(sf);
-    let list = selector.queryAll('ImportDeclaration').filter((item) => ts.isNamedImports(item.importClause.namedBindings));
+    let list = selector.queryAll('ImportDeclaration').filter((item) => item.importClause && ts.isNamedImports(item.importClause.namedBindings));
     let pathList = [];
     let exportNamedList = [];
     for (let i = 0; i < list.length; i++) {
         const importDeclaration = list[i];
-        pathList.push(getAbsolutePath(importDeclaration.moduleSpecifier.getText()).then((item) => {
+        pathList.push(getAbsolutePath(importDeclaration.moduleSpecifier.text).then((item) => {
             if (!item.includes('node_modules')) {
                 exportNamedList.push(...importDeclaration.importClause
                     .namedBindings.elements.map((item) => item.name.text));
