@@ -11,7 +11,13 @@ const asString = (buf) => {
   return buf;
 };
 
-export class NgRedirectModule extends NormalModule {
+export class NgNamedImportModule extends NormalModule {
+  /**
+   *
+   * @param options
+   * @param globalNamespace todo 未来可能考虑多层级时使用
+   *
+   */
   constructor(private options, private globalNamespace: string) {
     super(options);
   }
@@ -20,10 +26,7 @@ export class NgRedirectModule extends NormalModule {
     source = this.options.dependencies
       .map((item) => item.id)
       .filter((item: string) => item)
-      .map(
-        (item: string) =>
-          `export const ${item} = window.${[this.globalNamespace,item].filter(Boolean).join('.')};`
-      )
+      .map((item: string) => `window.importNgNamed('${item}');`)
       .join('\n');
     // if there is no identifier return raw source
     if (!this.identifier) {

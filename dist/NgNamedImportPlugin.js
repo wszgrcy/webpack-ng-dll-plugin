@@ -14,15 +14,15 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NgRedirectModulePlugin = void 0;
-const NgRedirectModule_1 = require("./NgRedirectModule");
+exports.NgNamedImportPlugin = void 0;
+const NgNamedImportModule_1 = require("./NgNamedImportModule");
 const path = __importStar(require("path"));
-class NgRedirectModulePlugin {
+class NgNamedImportPlugin {
     constructor(folderList, globalNamespace = '') {
         this.folderList = folderList;
         this.globalNamespace = globalNamespace;
@@ -61,7 +61,7 @@ class NgRedirectModulePlugin {
                             if (!result.request) {
                                 return callback(new Error('Empty dependency (no request)'));
                             }
-                            createdModule = new NgRedirectModule_1.NgRedirectModule(result, this.globalNamespace);
+                            createdModule = new NgNamedImportModule_1.NgNamedImportModule(result, this.globalNamespace);
                         }
                         createdModule = normalModuleFactory.hooks.module.call(createdModule, result);
                         return callback(null, createdModule);
@@ -71,4 +71,5 @@ class NgRedirectModulePlugin {
         });
     }
 }
-exports.NgRedirectModulePlugin = NgRedirectModulePlugin;
+exports.NgNamedImportPlugin = NgNamedImportPlugin;
+//# sourceMappingURL=NgNamedImportPlugin.js.map

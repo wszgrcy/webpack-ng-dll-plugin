@@ -1,11 +1,9 @@
 var loadedRemoteModuleMap = {};
-/** 加载时的map */
 var loadingRemoteModuleMap = {};
 function getDefaultModuleName(name) {
     if (name === void 0) { name = ''; }
     return name.split(/(\/|\\)/g).pop();
 }
-/** 载入远程模块,项目中使用 */
 function loadRemoteModule(url, moduleName) {
     !moduleName && (moduleName = getDefaultModuleName(url));
     if (loadedRemoteModuleMap[moduleName]) {
@@ -18,12 +16,10 @@ function loadRemoteModule(url, moduleName) {
         reject = rej;
     });
     loadedRemoteModuleMap[moduleName] = promise;
-    // todo moduleName设置默认名
     loadingRemoteModuleMap[moduleName] = resolve;
     requireEnsure(url, reject, moduleName);
     return promise;
 }
-/** 远程模块加载后调用 */
 function loadRemoteModuleJsonpCallback(name, module) {
     if (loadingRemoteModuleMap[name]) {
         loadingRemoteModuleMap[name](module);
@@ -32,7 +28,6 @@ function loadRemoteModuleJsonpCallback(name, module) {
 }
 window.loadRemoteModule = loadRemoteModule;
 window.loadRemoteModuleJsonpCallback = loadRemoteModuleJsonpCallback;
-/** 请求资源 */
 function requireEnsure(url, rej, name) {
     var script = document.createElement('script');
     var onScriptComplete;
@@ -55,7 +50,6 @@ function requireEnsure(url, rej, name) {
             });
         }
     };
-    // 超时状态
     var timeout = setTimeout(function () {
         onScriptComplete({ type: 'timeout', target: script });
     }, 120000);

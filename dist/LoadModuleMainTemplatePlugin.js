@@ -31,3 +31,4 @@ class RemoteModuleMainTemplatePlugin {
     }
 }
 exports.RemoteModuleMainTemplatePlugin = RemoteModuleMainTemplatePlugin;
+//# sourceMappingURL=LoadModuleMainTemplatePlugin.js.map

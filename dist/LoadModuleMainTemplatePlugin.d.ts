@@ -5,4 +5,3 @@ export declare class RemoteModuleMainTemplatePlugin {
     apply(compiler: webpack.Compiler): void;
     run(compilation: webpack.compilation.Compilation): void;
 }
-//# sourceMappingURL=LoadModuleMainTemplatePlugin.d.ts.map

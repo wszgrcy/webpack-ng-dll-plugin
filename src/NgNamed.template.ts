@@ -1,11 +1,13 @@
 (function () {
   let object = {};
-  function setProjectExport(key: string, instance: any) {
+  /** 导出ng命名 */
+  function exportNgNamed(key: string, instance: any) {
     object[key] = instance;
   }
-  (window as any).setProjectExport = setProjectExport;
-  function getProjectExport(key: string) {
+  (window as any).exportNgNamed = exportNgNamed;
+   /** 导入ng命名 */
+  function importNgNamed(key: string) {
     return object[key];
   }
-  (window as any).getProjectExport = getProjectExport;
+  (window as any).importNgNamed = importNgNamed;
 })();

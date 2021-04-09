@@ -1,7 +1,7 @@
 import * as webpack from 'webpack';
-import { NgRedirectModule } from './NgRedirectModule';
+import { NgNamedImportModule } from './NgNamedImportModule';
 import * as path from 'path';
-export class NgRedirectModulePlugin {
+export class NgNamedImportPlugin {
   constructor(
     private folderList: string[],
     private globalNamespace: string = ''
@@ -69,7 +69,7 @@ export class NgRedirectModulePlugin {
                       );
                     }
 
-                    createdModule = new NgRedirectModule(
+                    createdModule = new NgNamedImportModule(
                       result,
                       this.globalNamespace
                     );

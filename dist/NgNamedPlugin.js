@@ -19,24 +19,23 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RemoteModuleStartupPlugin = void 0;
-const webpack = __importStar(require("webpack"));
+exports.NgNamedPlugin = void 0;
 const fs_1 = require("fs");
+const webpack = __importStar(require("webpack"));
 const path = __importStar(require("path"));
-const { Template } = webpack;
-class RemoteModuleStartupPlugin {
+class NgNamedPlugin {
+    constructor() { }
     apply(compiler) {
-        compiler.hooks.thisCompilation.tap('RemoteModuleStartupPlugin', (compilation) => {
-            compilation.mainTemplate.hooks
-                .startup.tap('addInsertLoadModule', (source) => {
-                return Template.asString([
-                    '// RemoteModuleStartupPlugin',
-                    fs_1.readFileSync(path.resolve(__dirname, './module.template.js')).toString(),
+        compiler.hooks.thisCompilation.tap('NgNamedPlugin', (compilation) => {
+            compilation.mainTemplate.hooks.startup.tap('NgNamedPlugin', (source) => {
+                return webpack.Template.asString([
+                    '// NgNamedPlugin',
+                    fs_1.readFileSync(path.resolve(__dirname, './NgNamed.template.js')).toString(),
                     source,
                 ]);
             });
         });
     }
 }
-exports.RemoteModuleStartupPlugin = RemoteModuleStartupPlugin;
-//# sourceMappingURL=RemoteModuleStartupPlugin.js.map
+exports.NgNamedPlugin = NgNamedPlugin;
+//# sourceMappingURL=NgNamedPlugin.js.map
