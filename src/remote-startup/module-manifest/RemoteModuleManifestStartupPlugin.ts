@@ -3,7 +3,10 @@ import { SyncWaterfallHook } from 'tapable';
 import { readFileSync } from 'fs';
 import * as path from 'path';
 const { Template } = webpack;
-/** 远程模块启动插件 */
+/** 远程模块资源启动插件
+ * todo 如果有两个以上的main,nomodule module
+ * 可以通过全插入,然后后返回Promise
+ */
 export class RemoteModuleManifestStartupPlugin {
   apply(compiler: webpack.Compiler) {
     compiler.hooks.thisCompilation.tap(
