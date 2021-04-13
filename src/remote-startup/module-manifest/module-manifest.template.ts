@@ -1,6 +1,6 @@
 (() => {
   /** 载入远程模块,项目中使用 */
-  async function loadRemoteModuleManifest(config: {
+  function loadRemoteModuleManifest(config: {
     main: string;
     mainName: string;
     scripts: any[];
@@ -34,17 +34,19 @@
             res(true);
           };
           style.onerror = () => {
-            rej(false);
+            rej(item.href);
           };
         });
       })
     );
-    try {
-      await styleLoading;
-      return window.loadRemoteModule(config.main, config.mainName);
-    } catch (error) {
-      throw error;
-    }
+
+    return styleLoading
+      .then((list) => {
+        return window.loadRemoteModule(config.main, config.mainName);
+      })
+      .catch((error) => {
+        throw error;
+      });
   }
 
   (window as any).loadRemoteModuleManifest = loadRemoteModuleManifest;
