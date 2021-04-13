@@ -44,7 +44,7 @@ function requireEnsure(url, rej, name) {
   onScriptComplete = (event) => {
     script.onerror = script.onload = null;
     clearTimeout(timeout);
-    if (event.type === 'timout') {
+    if (event.type === 'timeout') {
       rej({
         type: event.type,
         message: 'timeout',
