@@ -7,6 +7,8 @@
     type?: string;
     src?: string;
     href?: string;
+    name?: string;
+    fileName?: string;
   }
   function loadScript(config: AttrGroup) {
     let script = document.createElement('script');
@@ -28,12 +30,14 @@
   }
   /** 载入远程模块,项目中使用 */
   function loadRemoteModuleManifest(config: {
-    mainScripts: (AttrGroup & { name: string })[];
     scripts: AttrGroup[];
     stylesheets: AttrGroup[];
   }): Promise<any> {
+    let mainScripts: AttrGroup[] = [];
     config.scripts.forEach((item) => {
-      loadScript(item);
+      if (item.name === 'main') {
+        mainScripts.push(item);
+      } else loadScript(item);
     });
     let styleLoading = Promise.all(
       config.stylesheets.map((item) => {
@@ -55,8 +59,8 @@
     return styleLoading
       .then(() =>
         Promise.race(
-          config.mainScripts.map((item) =>
-            (window as any).loadRemoteModule(loadScript(item), item.name)
+          mainScripts.map((item) =>
+            (window as any).loadRemoteModule(loadScript(item), item.fileName)
           )
         )
       )

@@ -18,8 +18,13 @@
         return script;
     }
     function loadRemoteModuleManifest(config) {
+        var mainScripts = [];
         config.scripts.forEach(function (item) {
-            loadScript(item);
+            if (item.name === 'main') {
+                mainScripts.push(item);
+            }
+            else
+                loadScript(item);
         });
         var styleLoading = Promise.all(config.stylesheets.map(function (item) {
             var style = document.createElement('link');
@@ -37,8 +42,8 @@
         }));
         return styleLoading
             .then(function () {
-            return Promise.race(config.mainScripts.map(function (item) {
-                return window.loadRemoteModule(loadScript(item), item.name);
+            return Promise.race(mainScripts.map(function (item) {
+                return window.loadRemoteModule(loadScript(item), item.fileName);
             }));
         })
             .catch(function (error) {
