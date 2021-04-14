@@ -3,7 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RemoteModuleMainTemplatePlugin = void 0;
 const { ConcatSource } = require('webpack-sources');
 class RemoteModuleMainTemplatePlugin {
-    constructor() {
+    constructor(exportName) {
+        this.exportName = exportName;
         this.varExpression = 'loadRemoteModuleJsonpCallback';
     }
     apply(compiler) {
@@ -14,7 +15,8 @@ class RemoteModuleMainTemplatePlugin {
     run(compilation) {
         const { mainTemplate, chunkTemplate } = compilation;
         const onRenderWithEntry = (source, chunk, hash) => {
-            return new ConcatSource(`loadRemoteModuleJsonpCallback('${compilation.outputOptions.filename}',`, source, `)`);
+            const pathAndInfo = compilation.getPathWithInfo(compilation.outputOptions.filename, { chunk, contentHashType: 'javascript', hash });
+            return new ConcatSource(`loadRemoteModuleJsonpCallback('${this.exportName || pathAndInfo.path}',`, source, `)`);
         };
         for (const template of [mainTemplate, chunkTemplate]) {
             template.hooks.renderWithEntry.tap('RemoteModuleMainTemplatePlugin', onRenderWithEntry);

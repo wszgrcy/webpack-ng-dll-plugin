@@ -4,7 +4,7 @@ import { SyncWaterfallHook } from 'tapable';
 /** 远程模块主模板 */
 export class RemoteModuleMainTemplatePlugin {
   varExpression = 'loadRemoteModuleJsonpCallback';
-  constructor() {}
+  constructor(private exportName?: string) {}
   apply(compiler: webpack.Compiler): void {
     compiler.hooks.thisCompilation.tap(
       'RemoteModuleMainTemplatePlugin',
@@ -17,8 +17,14 @@ export class RemoteModuleMainTemplatePlugin {
     const { mainTemplate, chunkTemplate } = compilation;
 
     const onRenderWithEntry = (source, chunk, hash) => {
+      const pathAndInfo = (compilation as any).getPathWithInfo(
+        compilation.outputOptions.filename,
+        { chunk, contentHashType: 'javascript', hash }
+      );
       return new ConcatSource(
-        `loadRemoteModuleJsonpCallback('${compilation.outputOptions.filename}',`,
+        `loadRemoteModuleJsonpCallback('${
+          this.exportName || pathAndInfo.path
+        }',`,
         source,
         `)`
       );

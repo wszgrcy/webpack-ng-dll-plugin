@@ -12,7 +12,8 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./helper"), exports);
 __exportStar(require("./NgDllPlugin"), exports);
-__exportStar(require("./RemoteModuleStartupPlugin"), exports);
+__exportStar(require("./remote-startup/module/RemoteModuleStartupPlugin"), exports);
+__exportStar(require("./remote-startup/module-manifest/RemoteModuleManifestStartupPlugin"), exports);
 __exportStar(require("./LoadModuleMainTemplatePlugin"), exports);
 __exportStar(require("./NgNamedImportPlugin"), exports);
 __exportStar(require("./NgNamedPlugin"), exports);
