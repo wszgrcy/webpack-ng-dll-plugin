@@ -15,7 +15,8 @@ class RemoteModuleMainTemplatePlugin {
     run(compilation) {
         const { mainTemplate, chunkTemplate } = compilation;
         const onRenderWithEntry = (source, chunk, hash) => {
-            return new ConcatSource(`loadRemoteModuleJsonpCallback('${this.exportName || compilation.outputOptions.filename}',`, source, `)`);
+            const pathAndInfo = compilation.getPathWithInfo(compilation.outputOptions.filename, { chunk, contentHashType: 'javascript', hash });
+            return new ConcatSource(`loadRemoteModuleJsonpCallback('${this.exportName || pathAndInfo.path}',`, source, `)`);
         };
         for (const template of [mainTemplate, chunkTemplate]) {
             template.hooks.renderWithEntry.tap('RemoteModuleMainTemplatePlugin', onRenderWithEntry);

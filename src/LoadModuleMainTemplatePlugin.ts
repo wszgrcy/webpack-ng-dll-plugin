@@ -17,9 +17,13 @@ export class RemoteModuleMainTemplatePlugin {
     const { mainTemplate, chunkTemplate } = compilation;
 
     const onRenderWithEntry = (source, chunk, hash) => {
+      const pathAndInfo = (compilation as any).getPathWithInfo(
+        compilation.outputOptions.filename,
+        { chunk, contentHashType: 'javascript', hash }
+      );
       return new ConcatSource(
         `loadRemoteModuleJsonpCallback('${
-          this.exportName || compilation.outputOptions.filename
+          this.exportName || pathAndInfo.path
         }',`,
         source,
         `)`
