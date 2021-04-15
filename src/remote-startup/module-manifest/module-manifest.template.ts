@@ -34,18 +34,31 @@
     stylesheets: AttrGroup[];
   }): Promise<any> {
     let mainScripts: AttrGroup[] = [];
+    let preLoading: Promise<boolean>[] = [];
     config.scripts.forEach((item) => {
       if (item.name === 'main') {
         mainScripts.push(item);
-      } else loadScript(item);
+      } else {
+        let script = loadScript(item);
+        preLoading.push(
+          new Promise((res, rej) => {
+            script.onload = () => {
+              res(true);
+            };
+            script.onerror = () => {
+              rej(script.src);
+            };
+          })
+        );
+      }
     });
-    let styleLoading = Promise.all(
-      config.stylesheets.map((item) => {
+    preLoading.push(
+      ...config.stylesheets.map((item) => {
         let style = document.createElement('link');
         style.rel = 'stylesheet';
         style.href = item.href;
         document.head.appendChild(style);
-        return new Promise((res, rej) => {
+        return new Promise<boolean>((res, rej) => {
           style.onload = () => {
             res(true);
           };
@@ -56,7 +69,7 @@
       })
     );
 
-    return styleLoading
+    return Promise.all(preLoading)
       .then(() =>
         Promise.race(
           mainScripts.map((item) =>

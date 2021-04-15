@@ -19,14 +19,24 @@
     }
     function loadRemoteModuleManifest(config) {
         var mainScripts = [];
+        var preLoading = [];
         config.scripts.forEach(function (item) {
             if (item.name === 'main') {
                 mainScripts.push(item);
             }
-            else
-                loadScript(item);
+            else {
+                var script_1 = loadScript(item);
+                preLoading.push(new Promise(function (res, rej) {
+                    script_1.onload = function () {
+                        res(true);
+                    };
+                    script_1.onerror = function () {
+                        rej(script_1.src);
+                    };
+                }));
+            }
         });
-        var styleLoading = Promise.all(config.stylesheets.map(function (item) {
+        preLoading.push.apply(preLoading, config.stylesheets.map(function (item) {
             var style = document.createElement('link');
             style.rel = 'stylesheet';
             style.href = item.href;
@@ -40,7 +50,7 @@
                 };
             });
         }));
-        return styleLoading
+        return Promise.all(preLoading)
             .then(function () {
             return Promise.race(mainScripts.map(function (item) {
                 return window.loadRemoteModule(loadScript(item), item.fileName);

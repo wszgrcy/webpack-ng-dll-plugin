@@ -1,6 +1,6 @@
 {
   "name": "webpack-ng-dll-plugin",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "description": "ng版本可用的dll插件,路子比较野",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
