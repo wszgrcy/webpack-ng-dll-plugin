@@ -32,20 +32,12 @@
     name: string,
     module: { [name: string]: any }
   ): void {
-    if (loadingRemoteModuleMap[name]) {
+    if (loadingRemoteModuleMap[name] && module) {
       loadingRemoteModuleMap[name](module);
       delete loadingRemoteModuleMap[name];
     } else {
-      let resolve: (param) => void;
-      let reject: (param) => void;
-      const promise = new Promise((res, rej) => {
-        resolve = res;
-        reject = rej;
-      });
-      loadedRemoteModuleMap[name] = promise;
-      loadingRemoteModuleMap[name] = resolve;
-
-      resolve(module);
+      console.error('moduleName:', name, ',moduleExport:', module);
+      throw new Error(`no ${name} found`);
     }
   }
   (window as any).loadRemoteModule = loadRemoteModule;

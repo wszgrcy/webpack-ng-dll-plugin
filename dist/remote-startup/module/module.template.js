@@ -24,20 +24,13 @@
         return promise;
     }
     function loadRemoteModuleJsonpCallback(name, module) {
-        if (loadingRemoteModuleMap[name]) {
+        if (loadingRemoteModuleMap[name] && module) {
             loadingRemoteModuleMap[name](module);
             delete loadingRemoteModuleMap[name];
         }
         else {
-            var resolve_1;
-            var reject_1;
-            var promise = new Promise(function (res, rej) {
-                resolve_1 = res;
-                reject_1 = rej;
-            });
-            loadedRemoteModuleMap[name] = promise;
-            loadingRemoteModuleMap[name] = resolve_1;
-            resolve_1(module);
+            console.error('moduleName:', name, ',moduleExport:', module);
+            throw new Error("no " + name + " found");
         }
     }
     window.loadRemoteModule = loadRemoteModule;
