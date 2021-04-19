@@ -4,7 +4,7 @@ import * as path from 'path';
 const asyncLib = require('neo-async');
 
 import DllEntryPlugin from 'webpack/lib/DllEntryPlugin';
-
+import LibManifestPlugin from 'webpack/lib/LibManifestPlugin';
 export interface NgDllPluginOptions {
   filter?: NgFilterPluginOptions;
   path: string;
@@ -32,7 +32,9 @@ export class NgDllPlugin {
       }
       return true;
     });
-    new LibManifestPlugin(this.options).apply(compiler);
+    new LibManifestPlugin({ ...this.options, entryOnly: false }).apply(
+      compiler
+    );
 
     new NgFilterPlugin(this.options.filter).apply(compiler);
   }
@@ -80,53 +82,66 @@ class NgFilterPlugin {
         return e;
       });
 
-      compilation.hooks.optimizeDependencies.tap('NgFilterPlugin', (modules) => {
-        // this.unCompressMap = new Map();
-        for (const module of modules as NormalModule[]) {
-          switch (this.options.mode) {
-            case 'full':
-              Object.defineProperty(module, 'used', {
-                get() {
-                  return true;
-                },
-                set() {},
-              });
-              // module.used = true;
-              module.usedExports = true;
-              module.addReason(null, null, this.explanation);
-              break;
-            case 'auto':
-              if (module.rawRequest && this.unCompressMap.has(module.rawRequest)) {
-                const oldIsUsed = module.isUsed;
-                const unCompressList = this.unCompressMap.get(module.rawRequest);
-                module.isUsed = function (name: string) {
-                  if (unCompressList.includes(name)) {
-                    return name;
-                  }
-                  return oldIsUsed.call(this, name);
-                };
-              }
-              module.addReason(null, null, this.explanation);
-              this.setUnCompressMap(module);
-              break;
-            case 'manual':
-              if (module.rawRequest && this.unCompressMap.has(module.rawRequest)) {
-                const oldIsUsed = module.isUsed;
-                const unCompressList = this.unCompressMap.get(module.rawRequest);
-                module.isUsed = function (name: string) {
-                  if (unCompressList.includes(name)) {
-                    return name;
-                  }
-                  return oldIsUsed.call(this, name);
-                };
-              }
-              module.addReason(null, null, this.explanation);
-              break;
-            default:
-              break;
+      compilation.hooks.optimizeDependencies.tap(
+        'NgFilterPlugin',
+        (modules) => {
+          // this.unCompressMap = new Map();
+          for (const module of modules as NormalModule[]) {
+            switch (this.options.mode) {
+              case 'full':
+                Object.defineProperty(module, 'used', {
+                  get() {
+                    return true;
+                  },
+                  set() {},
+                });
+                // module.used = true;
+                module.usedExports = true;
+                module.addReason(null, null, this.explanation);
+                break;
+              case 'auto':
+                if (
+                  module.rawRequest &&
+                  this.unCompressMap.has(module.rawRequest)
+                ) {
+                  const oldIsUsed = module.isUsed;
+                  const unCompressList = this.unCompressMap.get(
+                    module.rawRequest
+                  );
+                  module.isUsed = function (name: string) {
+                    if (unCompressList.includes(name)) {
+                      return name;
+                    }
+                    return oldIsUsed.call(this, name);
+                  };
+                }
+                module.addReason(null, null, this.explanation);
+                this.setUnCompressMap(module);
+                break;
+              case 'manual':
+                if (
+                  module.rawRequest &&
+                  this.unCompressMap.has(module.rawRequest)
+                ) {
+                  const oldIsUsed = module.isUsed;
+                  const unCompressList = this.unCompressMap.get(
+                    module.rawRequest
+                  );
+                  module.isUsed = function (name: string) {
+                    if (unCompressList.includes(name)) {
+                      return name;
+                    }
+                    return oldIsUsed.call(this, name);
+                  };
+                }
+                module.addReason(null, null, this.explanation);
+                break;
+              default:
+                break;
+            }
           }
         }
-      });
+      );
     });
   }
 
@@ -143,10 +158,13 @@ class NgFilterPlugin {
         module.dependencies.forEach((dependency) => {
           if (
             dependency.request &&
-            /(^(@angular(\/|\\)(core|common|router|platform-browser|forms))$)|rxjs/.test(dependency.request) &&
+            /(^(@angular(\/|\\)(core|common|router|platform-browser|forms))$)|rxjs/.test(
+              dependency.request
+            ) &&
             dependency.id
           ) {
-            const list: string[] = this.unCompressMap.get(dependency.request) || [];
+            const list: string[] =
+              this.unCompressMap.get(dependency.request) || [];
             if (!list.includes(dependency.id)) {
               list.push(dependency.id);
             }
@@ -155,71 +173,5 @@ class NgFilterPlugin {
         });
       }
     }
-  }
-}
-
-class LibManifestPlugin {
-  private options;
-  constructor(options) {
-    this.options = options;
-  }
-
-  apply(compiler) {
-    compiler.hooks.emit.tapAsync('LibManifestPlugin', (compilation, callback) => {
-      asyncLib.forEach(
-        compilation.chunks,
-        (chunk, callback) => {
-          if (!chunk.isOnlyInitial()) {
-            callback();
-            return;
-          }
-          const targetPath = compilation.getPath(this.options.path, {
-            hash: compilation.hash,
-            chunk,
-          });
-          const name =
-            this.options.name &&
-            compilation.getPath(this.options.name, {
-              hash: compilation.hash,
-              chunk,
-            });
-          const manifest = {
-            name,
-            type: this.options.type,
-            content: Array.from(chunk.modulesIterable, (module: any) => {
-              if (module.libIdent) {
-                const ident = module.libIdent({
-                  context: this.options.context || compiler.options.context,
-                });
-                if (ident) {
-                  return {
-                    ident,
-                    data: {
-                      id: module.id,
-                      buildMeta: module.buildMeta,
-                    },
-                  };
-                }
-              }
-            })
-              .filter(Boolean)
-              .reduce((obj, item) => {
-                obj[item.ident] = item.data;
-                return obj;
-              }, Object.create(null)),
-          };
-          // Apply formatting to content if format flag is true;
-          const manifestContent = this.options.format ? JSON.stringify(manifest, null, 2) : JSON.stringify(manifest);
-          const content = Buffer.from(manifestContent, 'utf8');
-          compiler.outputFileSystem.mkdirp(path.dirname(targetPath), (err) => {
-            if (err) {
-              return callback(err);
-            }
-            compiler.outputFileSystem.writeFile(targetPath, content, callback);
-          });
-        },
-        callback
-      );
-    });
   }
 }
