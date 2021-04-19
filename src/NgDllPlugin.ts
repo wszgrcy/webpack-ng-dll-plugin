@@ -1,7 +1,5 @@
 import * as webpack from 'webpack';
 import { SyncWaterfallHook } from 'tapable';
-import * as path from 'path';
-const asyncLib = require('neo-async');
 
 import DllEntryPlugin from 'webpack/lib/DllEntryPlugin';
 import LibManifestPlugin from 'webpack/lib/LibManifestPlugin';
