@@ -1,6 +1,7 @@
 import webpack from 'webpack';
 import * as ts from 'typescript';
 import { createCssSelectorForTs } from 'cyia-code-util';
+const exportNamedObject = {};
 /**
  * todo 增加 排除路径,排除模块,排除路径对应的模块...
  */
@@ -41,12 +42,23 @@ export default function (this: webpack.loader.LoaderContext, data: string) {
         (importDeclaration.moduleSpecifier as ts.StringLiteral).text
       ).then((item: string) => {
         if (!item.includes('node_modules')) {
-          exportNamedList.push(
-            ...(importDeclaration.importClause
-              .namedBindings as ts.NamedImports).elements.map(
-              (item) => item.name.text
-            )
-          );
+          let namedList = (importDeclaration.importClause
+            .namedBindings as ts.NamedImports).elements;
+          namedList.forEach((namedItem) => {
+            if (exportNamedObject[namedItem.name.text]) {
+              if (exportNamedObject[namedItem.name.text] !== item) {
+                throw new Error(
+                  `repeat namedExport in [${
+                    exportNamedObject[namedItem.name.text]
+                  }] and [${item}]`
+                );
+              } else {
+                return;
+              }
+            }
+            exportNamedObject[namedItem.name.text] = item;
+            exportNamedList.push(namedItem.name.text);
+          });
         }
       })
     );
