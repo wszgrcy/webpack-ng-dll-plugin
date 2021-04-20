@@ -1,11 +1,15 @@
 import webpack from 'webpack';
 import * as ts from 'typescript';
 import { createCssSelectorForTs } from 'cyia-code-util';
+export interface NgNamedExportLoaderOptions {
+  excludeNamed?: string[];
+  excludeRelation?: Record<string, string>;
+  filter?: (filePath: string, named: string) => boolean;
+}
 const exportNamedObject = {};
-/**
- * todo 增加 排除路径,排除模块,排除路径对应的模块...
- */
+
 export default function (this: webpack.loader.LoaderContext, data: string) {
+  let options: NgNamedExportLoaderOptions = this.query || {};
   let getAbsolutePath = (moduleSpecifier: string) => {
     return new Promise<string>((res, rej) => {
       this.resolve(this.context, moduleSpecifier, (err, resource) => {
@@ -27,7 +31,7 @@ export default function (this: webpack.loader.LoaderContext, data: string) {
     true
   );
   let selector = createCssSelectorForTs(sf);
-  let list = ((selector.queryAll(
+  let importDeclarationList = ((selector.queryAll(
     'ImportDeclaration'
   ) as any) as ts.ImportDeclaration[]).filter(
     (item) =>
@@ -35,31 +39,44 @@ export default function (this: webpack.loader.LoaderContext, data: string) {
   );
   let pathList = [];
   let exportNamedList: string[] = [];
-  for (let i = 0; i < list.length; i++) {
-    const importDeclaration = list[i];
+  for (let i = 0; i < importDeclarationList.length; i++) {
+    const importDeclaration = importDeclarationList[i];
     pathList.push(
       getAbsolutePath(
         (importDeclaration.moduleSpecifier as ts.StringLiteral).text
-      ).then((item: string) => {
-        if (!item.includes('node_modules')) {
-          let namedList = (importDeclaration.importClause
-            .namedBindings as ts.NamedImports).elements;
-          namedList.forEach((namedItem) => {
-            if (exportNamedObject[namedItem.name.text]) {
-              if (exportNamedObject[namedItem.name.text] !== item) {
+      ).then((absolutePath: string) => {
+        if (absolutePath.includes('node_modules')) {
+          return;
+        }
+
+        let namedList = (importDeclaration.importClause
+          .namedBindings as ts.NamedImports).elements;
+        namedList
+          .map((item) => item.name.text)
+          .forEach((named) => {
+            if (options.excludeNamed && options.excludeNamed.includes(named)) {
+              return;
+            }
+            if (options.excludeRelation) {
+              if (options.excludeRelation[named] === absolutePath) {
+                return;
+              }
+            }
+            if (options.filter && options.filter(absolutePath, named)) {
+              return;
+            }
+            if (exportNamedObject[named]) {
+              if (exportNamedObject[named] !== absolutePath) {
                 throw new Error(
-                  `repeat namedExport in [${
-                    exportNamedObject[namedItem.name.text]
-                  }] and [${item}]`
+                  `repeat namedExport in [${exportNamedObject[named]}] and [${absolutePath}]`
                 );
               } else {
                 return;
               }
             }
-            exportNamedObject[namedItem.name.text] = item;
-            exportNamedList.push(namedItem.name.text);
+            exportNamedObject[named] = absolutePath;
+            exportNamedList.push(named);
           });
-        }
       })
     );
   }
