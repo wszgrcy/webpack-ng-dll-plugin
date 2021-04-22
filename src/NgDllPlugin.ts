@@ -64,6 +64,22 @@ class NgFilterPlugin {
   }
 
   apply(compiler: webpack.Compiler) {
+    compiler.hooks.compile.tap(
+      'NgFilterPlugin',
+      ({
+        normalModuleFactory,
+      }: {
+        normalModuleFactory: webpack.compilation.NormalModuleFactory;
+      }) => {
+        normalModuleFactory.hooks.parser
+          .for('javascript/auto')
+          .tap('NgFilterPlugin', (parser) => {
+            parser.hooks.importCall.tap('NgFilterPlugin', () => {
+              return false;
+            });
+          });
+      }
+    );
     compiler.hooks.thisCompilation.tap('NgFilterPlugin', (compilation) => {
       const hooks: {
         modules: SyncWaterfallHook<string, webpack.compilation.Chunk>;
