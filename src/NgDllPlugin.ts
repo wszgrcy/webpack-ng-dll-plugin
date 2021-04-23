@@ -45,8 +45,9 @@ interface NormalModule extends webpack.compilation.Module {
 }
 
 interface NgFilterPluginOptions {
-  mode: 'full' | 'auto' | 'manual';
+  mode: 'full' | 'auto' | 'manual' | 'filter';
   map?: { [name: string]: string[] };
+  filter?: (module: NormalModule) => boolean;
 }
 
 class NgFilterPlugin {
@@ -59,6 +60,10 @@ class NgFilterPlugin {
         this.unCompressMap = new Map(Object.entries(this.options.map));
       } else {
         throw new Error('[manual] mode must have [map] Property');
+      }
+    } else if (this.options.mode === 'filter') {
+      if (!this.options.filter) {
+        throw new Error('[filter] mode must have [filter] Property');
       }
     }
   }
@@ -150,8 +155,21 @@ class NgFilterPlugin {
                 }
                 module.addReason(null, null, this.explanation);
                 break;
-              default:
+              case 'filter':
+                if (this.options.filter(module)) {
+                  Object.defineProperty(module, 'used', {
+                    get() {
+                      return true;
+                    },
+                    set() {},
+                  });
+                  // module.used = true;
+                  module.usedExports = true;
+                  module.addReason(null, null, this.explanation);
+                }
                 break;
+              default:
+                throw new Error(`unknown mode [${this.options.mode}]`);
             }
           }
         }
