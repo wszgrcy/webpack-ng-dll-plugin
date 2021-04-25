@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["./src/**/*.template.ts"],
+  "exclude": [""],
+
+  "compilerOptions": {
+    "target": "ES5",
+    "sourceMap": false,
+    "declaration": false,
+    "declarationMap": false,
+    "outDir": "src/"
+  }
+}
