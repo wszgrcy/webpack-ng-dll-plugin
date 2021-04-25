@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
-    "pretest": "yarn build:template:dev&& npx cpx \"./test/hello-world-app/**/*\" \"./node_modules/@angular-devkit/build-angular/test/hello-world-app\"",
+    "pretest": "yarn build:template:dev&& npx cpx \"./test/hello-world-app/**/{*,.*}\" \"./node_modules/@angular-devkit/build-angular/test/hello-world-app\"",
     "test": "jest",
     "build": "rimraf ./dist&& tsc",
     "build:template:dev": "tsc --build tsconfig.template-dev.json",
