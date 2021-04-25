@@ -35,7 +35,7 @@ describeBuilder(
   }),
   BROWSER_BUILDER_INFO,
   (harness) => {
-    describe.only('NgDllPlugin', () => {
+    describe('NgDllPlugin', () => {
       it('可执行', async () => {
         harness.useTarget('build', angularConfig);
 
