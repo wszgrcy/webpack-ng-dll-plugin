@@ -40,3 +40,15 @@ export const DEFAULT_ANGULAR_CONFIG = {
   styles: ['src/styles.css'],
   scripts: [],
 };
+export const DEFAULT_SUB_ANGULAR_CONFIG = {
+  outputPath: 'dist/testSubProject',
+  index: '',
+  main: 'projects/sub1/src/main.ts',
+  polyfills: 'projects/sub1/src/polyfills.ts',
+  tsConfig: 'projects/sub1/tsconfig.app.json',
+  progress: false,
+  assets: [],
+  styles: ['projects/sub1/src/styles.scss'],
+  scripts: [],
+  aot: true,
+};

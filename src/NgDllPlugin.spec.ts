@@ -6,7 +6,6 @@ import {
 } from '../test/test-builder/browser';
 import * as path from 'path';
 import { setNgDllPlugin } from './helper';
-
 let angularConfig = { ...DEFAULT_ANGULAR_CONFIG, vendorChunk: false };
 describeBuilder(
   buildWebpackBrowserGenerate((options, context) => {

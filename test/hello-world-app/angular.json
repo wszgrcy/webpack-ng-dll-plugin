@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../packages/angular_devkit/core/src/workspace/workspace-schema.json",
+  "$schema": "",
   "version": 1,
   "newProjectRoot": "./projects",
   "cli": {},
@@ -147,25 +147,81 @@
         }
       }
     },
-    "app-e2e": {
-      "root": "e2e",
+
+    "sub1": {
       "projectType": "application",
-      "targets": {
-        "e2e": {
-          "builder": "@angular-devkit/build-angular:protractor",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      },
+      "root": "projects/sub1",
+      "sourceRoot": "projects/sub1/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-builders/custom-webpack:browser",
           "options": {
-            "protractorConfig": "protractor.conf.js",
-            "devServerTarget": "app:serve",
-            "webdriverUpdate": false
+            "outputPath": "dist/sub1",
+            "index": "",
+            "main": "projects/sub1/src/main.ts",
+            "polyfills": "projects/sub1/src/polyfills.ts",
+            "tsConfig": "projects/sub1/tsconfig.app.json",
+            "aot": true,
+            "assets": [
+              "projects/sub1/src/favicon.ico",
+              "projects/sub1/src/assets"
+            ],
+            "styles": ["projects/sub1/src/styles.scss"],
+            "scripts": [],
+            "customWebpackConfig": {
+              "path": "./webpack.config.sub1.ts"
+            },
+            "vendorChunk": false,
+            "deployUrl": "http://127.0.0.1:4201/"
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/sub1/src/environments/environment.ts",
+                  "with": "projects/sub1/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": true,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "deployUrl": "/ng-cli-plugin-demo/sub1/",
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb",
+                  "maximumError": "10kb"
+                }
+              ]
+            }
           }
         },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
+        "serve": {
+          "builder": "@angular-builders/custom-webpack:dev-server",
           "options": {
-            "tsConfig": "e2e/tsconfig.e2e.json",
-            "exclude": [
-              "**/node_modules/**"
-            ]
+            "browserTarget": "sub1:build",
+            "publicHost": "0.0.0.0:4201",
+            "port": 4201
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "sub1:build:production"
+            }
           }
         }
       }

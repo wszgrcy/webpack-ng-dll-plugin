@@ -16,17 +16,16 @@ describeBuilder(
   }),
   BROWSER_BUILDER_INFO,
   (harness) => {
-    describe.only('NgNamedPlugin', () => {
+    describe('NgNamedPlugin', () => {
       it('可执行', async () => {
         harness.useTarget('build', angularConfig);
 
         let result = await harness.executeOnce();
         result;
         expect(harness.hasFile('dist/testProject/runtime-es5.js')).toBe(true);
-        let fileContent=harness.readFile('dist/testProject/runtime-es5.js')
-        expect(fileContent).toContain('// NgNamedPlugin')
-        expect(fileContent).toContain('window.exportNgNamed')
-
+        let fileContent = harness.readFile('dist/testProject/runtime-es5.js');
+        expect(fileContent).toContain('// NgNamedPlugin');
+        expect(fileContent).toContain('window.exportNgNamed');
       });
     });
   }
