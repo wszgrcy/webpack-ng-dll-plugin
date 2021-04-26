@@ -1,7 +1,7 @@
 {
   "name": "webpack-ng-dll-plugin",
   "version": "2.0.10",
-  "description": "ng版本可用的dll插件,路子比较野",
+  "description": "ng远程加载插件库",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
@@ -63,7 +63,8 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.ts",
+      "!**/*.template.{js,ts}"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
