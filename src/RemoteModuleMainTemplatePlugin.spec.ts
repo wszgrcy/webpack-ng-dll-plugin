@@ -1,4 +1,4 @@
-import { describeBuilder } from '@angular-devkit/build-angular/src/testing';
+import { describeBuilder } from "../test/plugin-describe-builder";
 import { RemoteModuleMainTemplatePlugin } from './RemoteModuleMainTemplatePlugin';
 import {
   BROWSER_BUILDER_INFO,
@@ -16,14 +16,14 @@ describeBuilder(
   }),
   BROWSER_BUILDER_INFO,
   (harness) => {
-    describe('LoadModuleMainTemplatePlugin', () => {
+    describe('RemoteModuleMainTemplatePlugin', () => {
       it('可执行', async () => {
         harness.useTarget('build', angularConfig);
         let result = await harness.executeOnce();
-        expect(harness.hasFile('dist/testSubProject/main-es2015.js')).toBe(
+        expect(harness.hasFile('dist/testSubProject/main.js')).toBe(
           true
         );
-        let content = harness.readFile(`dist/testSubProject/main-es2015.js`);
+        let content = harness.readFile(`dist/testSubProject/main.js`);
         expect(content).toContain('loadRemoteModuleJsonpCallback');
       });
     });

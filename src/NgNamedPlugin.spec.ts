@@ -1,4 +1,4 @@
-import { describeBuilder } from '@angular-devkit/build-angular/src/testing';
+import { describeBuilder } from "../test/plugin-describe-builder";
 import {
   BROWSER_BUILDER_INFO,
   buildWebpackBrowserGenerate,
@@ -22,8 +22,8 @@ describeBuilder(
 
         let result = await harness.executeOnce();
         result;
-        expect(harness.hasFile('dist/testProject/runtime-es5.js')).toBe(true);
-        let fileContent = harness.readFile('dist/testProject/runtime-es5.js');
+        expect(harness.hasFile('dist/testProject/runtime.js')).toBe(true);
+        let fileContent = harness.readFile('dist/testProject/runtime.js');
         expect(fileContent).toContain('// NgNamedPlugin');
         expect(fileContent).toContain('window.exportNgNamed');
       });

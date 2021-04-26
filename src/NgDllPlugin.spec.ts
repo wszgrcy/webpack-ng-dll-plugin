@@ -1,4 +1,4 @@
-import { describeBuilder } from '@angular-devkit/build-angular/src/testing';
+import { describeBuilder } from "../test/plugin-describe-builder";
 import {
   BROWSER_BUILDER_INFO,
   buildWebpackBrowserGenerate,

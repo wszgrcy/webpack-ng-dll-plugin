@@ -39,6 +39,7 @@ export const DEFAULT_ANGULAR_CONFIG = {
   assets: ['src/favicon.ico', 'src/assets'],
   styles: ['src/styles.css'],
   scripts: [],
+  aot: true,
 };
 export const DEFAULT_SUB_ANGULAR_CONFIG = {
   outputPath: 'dist/testSubProject',
