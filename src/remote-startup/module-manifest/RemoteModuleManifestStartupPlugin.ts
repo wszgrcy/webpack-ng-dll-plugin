@@ -13,7 +13,7 @@ export class RemoteModuleManifestStartupPlugin {
       'RemoteModuleManifestStartupPlugin',
       (compilation) => {
         ((compilation.mainTemplate.hooks as any)
-          .startup as SyncWaterfallHook).tap(
+          .bootstrap as SyncWaterfallHook).tap(
           'RemoteModuleManifestStartupPlugin',
           (source) => {
             return Template.asString([

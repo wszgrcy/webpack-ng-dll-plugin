@@ -10,7 +10,7 @@ export class RemoteModuleStartupPlugin {
       'RemoteModuleStartupPlugin',
       (compilation) => {
         ((compilation.mainTemplate.hooks as any)
-          .startup as SyncWaterfallHook).tap(
+          .bootstrap as SyncWaterfallHook).tap(
           'addInsertLoadModule',
           (source) => {
             return Template.asString([

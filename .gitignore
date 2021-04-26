@@ -2,3 +2,4 @@ node_modules
 /dist
 src/**/*.js
 test-project-host-hello-world-app*
+coverage
