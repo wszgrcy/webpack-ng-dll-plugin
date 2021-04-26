@@ -1,12 +1,14 @@
 {
   "name": "webpack-ng-dll-plugin",
   "version": "2.0.10",
-  "description": "ng版本可用的dll插件,路子比较野",
+  "description": "ng远程加载插件库",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
+    "pretest": "yarn build:template:dev",
     "test": "jest",
     "build": "rimraf ./dist&& tsc",
+    "build:template:dev": "tsc --build tsconfig.template-dev.json",
     "postbuild": "tsc --build tsconfig.template.json"
   },
   "repository": {
@@ -26,6 +28,16 @@
     "cyia-code-util": "^1.0.6"
   },
   "devDependencies": {
+    "@angular-devkit/architect": "^0.1102.10",
+    "@angular-devkit/build-angular": "^0.1102.10",
+    "@angular-devkit/core": "^11.2.10",
+    "@angular/common": "^11.2.11",
+    "@angular/compiler-cli": "^11.2.11",
+    "@angular/core": "^11.2.11",
+    "@angular/localize": "^11.2.11",
+    "@angular/platform-browser": "^11.2.11",
+    "@angular/platform-browser-dynamic": "^11.2.11",
+    "@angular/platform-server": "^11.2.11",
     "@types/jest": "^26.0.22",
     "@types/loader-runner": "^2.2.3",
     "@types/webpack": "^4.41.22",
@@ -33,9 +45,11 @@
     "jest": "^26.6.3",
     "loader-runner": "^4.2.0",
     "rimraf": "^3.0.2",
+    "rxjs": "^6.6.7",
     "ts-jest": "^26.5.4",
-    "typescript": "^4.2.4",
-    "webpack": "^4.44.2"
+    "typescript": "4.1.5",
+    "webpack": "^4.44.2",
+    "zone.js": "^0.11.4"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -49,7 +63,8 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.ts",
+      "!**/*.template.{js,ts}"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"

@@ -1,6 +1,8 @@
 /src
 test
 tsconfig.json
+tsconfig.spec.json
 tsconfig.template.json
+tsconfig.template-dev.json
 .prettierrc
 .gitignore

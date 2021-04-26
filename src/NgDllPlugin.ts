@@ -45,8 +45,7 @@ interface NormalModule extends webpack.compilation.Module {
 }
 
 interface NgFilterPluginOptions {
-  mode: 'full' | 'auto' | 'manual' | 'filter';
-  map?: { [name: string]: string[] };
+  mode: 'full' | 'auto' | 'filter';
   filter?: (module: NormalModule) => boolean;
 }
 
@@ -55,13 +54,7 @@ class NgFilterPlugin {
   unCompressMap: Map<string, string[]> = new Map();
   constructor(private options: NgFilterPluginOptions = { mode: 'full' }) {
     // this.options.mode = this.options.mode || 'full';
-    if (this.options.mode === 'manual') {
-      if (this.options.map) {
-        this.unCompressMap = new Map(Object.entries(this.options.map));
-      } else {
-        throw new Error('[manual] mode must have [map] Property');
-      }
-    } else if (this.options.mode === 'filter') {
+    if (this.options.mode === 'filter') {
       if (!this.options.filter) {
         throw new Error('[filter] mode must have [filter] Property');
       }
@@ -136,24 +129,6 @@ class NgFilterPlugin {
                 }
                 module.addReason(null, null, this.explanation);
                 this.setUnCompressMap(module);
-                break;
-              case 'manual':
-                if (
-                  module.rawRequest &&
-                  this.unCompressMap.has(module.rawRequest)
-                ) {
-                  const oldIsUsed = module.isUsed;
-                  const unCompressList = this.unCompressMap.get(
-                    module.rawRequest
-                  );
-                  module.isUsed = function (name: string) {
-                    if (unCompressList.includes(name)) {
-                      return name;
-                    }
-                    return oldIsUsed.call(this, name);
-                  };
-                }
-                module.addReason(null, null, this.explanation);
                 break;
               case 'filter':
                 if (this.options.filter(module)) {
