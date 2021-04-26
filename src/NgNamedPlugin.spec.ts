@@ -21,7 +21,6 @@ describeBuilder(
         harness.useTarget('build', angularConfig);
 
         let result = await harness.executeOnce();
-        result;
         expect(harness.hasFile('dist/testProject/runtime.js')).toBe(true);
         let fileContent = harness.readFile('dist/testProject/runtime.js');
         expect(fileContent).toContain('// NgNamedPlugin');

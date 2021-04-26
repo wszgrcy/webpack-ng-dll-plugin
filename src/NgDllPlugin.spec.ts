@@ -117,8 +117,6 @@ describeBuilder(
 describeBuilder(
   buildWebpackBrowserGenerate((options, context) => {
     return (config) => {
-      options;
-      context;
       setNgDllPlugin(
         config,
         {
