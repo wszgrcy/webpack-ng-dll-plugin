@@ -6,3 +6,6 @@ tsconfig.template.json
 tsconfig.template-dev.json
 .prettierrc
 .gitignore
+coverage
+.github
+docs
