@@ -4,26 +4,26 @@ import {
   buildWebpackBrowserGenerate,
   DEFAULT_SUB_ANGULAR_CONFIG,
 } from '../../../test/test-builder/browser';
-import { RemoteModuleManifestStartupPlugin } from './RemoteModuleManifestStartupPlugin';
+import { RemoteModuleStartupMainTemplatePlugin } from './RemoteModuleStartupMainTemplatePlugin';
 
 let angularConfig = { ...DEFAULT_SUB_ANGULAR_CONFIG };
 describeBuilder(
   buildWebpackBrowserGenerate((options, context) => {
     return (config) => {
-      config.plugins.push(new RemoteModuleManifestStartupPlugin());
+      config.plugins.push(new RemoteModuleStartupMainTemplatePlugin());
       return config;
     };
   }),
   BROWSER_BUILDER_INFO,
   (harness) => {
-    describe('RemoteModuleMainTemplatePlugin', () => {
+    describe('RemoteModuleStartupMainTemplatePlugin', () => {
       it('可执行', async () => {
         harness.useTarget('build', angularConfig);
         let result = await harness.executeOnce();
         expect(harness.hasFile('dist/testSubProject/runtime.js')).toBe(true);
         let content = harness.readFile(`dist/testSubProject/runtime.js`);
-        expect(content).toContain('// RemoteModuleManifestStartupPlugin');
-        expect(content).toContain('loadRemoteModuleManifest');
+        expect(content).toContain('// RemoteModuleStartupMainTemplatePlugin');
+        expect(content).toContain('loadRemoteModule');
       });
     });
   }

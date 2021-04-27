@@ -1,6 +1,8 @@
 import * as webpack from 'webpack';
 import { NgDllPlugin, NgDllPluginOptions } from './NgDllPlugin';
-
+/**
+ * 设置NgDllPlugin,减少不必要的生成文件
+ */
 export function setNgDllPlugin(
   config: webpack.Configuration,
   option: {
@@ -32,12 +34,12 @@ export function setNgDllPlugin(
 /**
  * 清理无用的输出文件(当仅输出js时)
  *
- * @author cyia
- * @date 2020-10-12
- * @export
+ * 
+ * 
+ * 
  * @param config webpack配置
  * @param option 清理配置
- * @param [angularOptions] angular.json配置
+ * @param angularOptions angular.json配置
  */
 export function cleanOutputFile(
   config: webpack.Configuration,

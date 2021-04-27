@@ -4,16 +4,25 @@ import { SyncWaterfallHook } from 'tapable';
 import DllEntryPlugin from 'webpack/lib/DllEntryPlugin';
 import LibManifestPlugin from 'webpack/lib/LibManifestPlugin';
 export interface NgDllPluginOptions {
+  /** 模块是否会在dll中生成的相关配置 */
   filter?: NgFilterPluginOptions;
+  /** manifest 生成的位置 */
   path: string;
+  /** dll的名字 */
   name: string;
+  /** 传入 LibManifestPlugin 生成 manifest 时是否格式化 */
   format?: boolean;
 }
 
+/**
+ * `webpack` `DllPlugin`的修改版本,用于实现 ng 的 dll
+ *
+ *
+ */
 export class NgDllPlugin {
   constructor(private options: NgDllPluginOptions) {}
 
-  apply(compiler) {
+  apply(compiler: webpack.Compiler) {
     compiler.hooks.entryOption.tap('NgDllPlugin', (context, entry) => {
       const itemToPlugin = (item, name) => {
         if (Array.isArray(item)) {
@@ -44,8 +53,10 @@ interface NormalModule extends webpack.compilation.Module {
   dependencies: any[];
 }
 
-interface NgFilterPluginOptions {
+export interface NgFilterPluginOptions {
+  /** 过滤插件的过滤模式,默认full */
   mode: 'full' | 'auto' | 'filter';
+  /** mode==='filter' 下使用,通过逻辑控制 */
   filter?: (module: NormalModule) => boolean;
 }
 

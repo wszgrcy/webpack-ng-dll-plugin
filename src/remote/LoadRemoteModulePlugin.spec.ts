@@ -1,30 +1,30 @@
-import { describeBuilder } from '../test/plugin-describe-builder';
+import { describeBuilder } from "../../test/plugin-describe-builder";
+import { LoadRemoteModulePlugin } from './LoadRemoteModulePlugin';
 import {
   BROWSER_BUILDER_INFO,
   buildWebpackBrowserGenerate,
   DEFAULT_SUB_ANGULAR_CONFIG,
-} from '../test/test-builder/browser';
-import { NgNamedImportPlugin } from './NgNamedImportPlugin';
-import * as path from 'path';
+} from '../../test/test-builder/browser';
+
 let angularConfig = { ...DEFAULT_SUB_ANGULAR_CONFIG };
 describeBuilder(
   buildWebpackBrowserGenerate((options, context) => {
     return (config) => {
-      config.plugins.push(
-        new NgNamedImportPlugin([path.resolve(context.workspaceRoot, 'src')])
-      );
+      config.plugins.push(new LoadRemoteModulePlugin());
       return config;
     };
   }),
   BROWSER_BUILDER_INFO,
   (harness) => {
-    describe('NgNamedImportPlugin', () => {
+    describe('LoadRemoteModulePlugin', () => {
       it('可执行', async () => {
         harness.useTarget('build', angularConfig);
         let result = await harness.executeOnce();
-        expect(harness.hasFile('dist/testSubProject/main.js')).toBe(true);
+        expect(harness.hasFile('dist/testSubProject/main.js')).toBe(
+          true
+        );
         let content = harness.readFile(`dist/testSubProject/main.js`);
-        expect(content).toContain(`window.importNgNamed('MainService')`);
+        expect(content).toContain('loadRemoteModuleJsonpCallback');
       });
     });
   }

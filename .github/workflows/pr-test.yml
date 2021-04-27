@@ -1,0 +1,30 @@
+name: PR-TEST
+
+on:
+  pull_request:
+    branches:
+      - main
+env:
+  REPOSITORY_PATH: https://${{secrets.ACCESS_TOKEN}}@github.com/
+  # GITHUB_TOKEN: ${{secrets.ACCESS_TOKEN}}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: init
+        run: |
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@gmail.com"
+      - name: pull-code
+        uses: actions/checkout@v2
+      - name: install-node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+      - name: install-dependencies
+        run: |
+          yarn
+      - name: build
+        run: |
+          yarn test

@@ -1,22 +1,22 @@
-import { describeBuilder } from "../test/plugin-describe-builder";
+import { describeBuilder } from "../../../test/plugin-describe-builder";
 import {
   BROWSER_BUILDER_INFO,
   buildWebpackBrowserGenerate,
   DEFAULT_ANGULAR_CONFIG,
-} from '../test/test-builder/browser';
-import { NgNamedPlugin } from './NgNamedPlugin';
+} from '../../../test/test-builder/browser';
+import { NgNamedMainTemplatePlugin } from './NgNamedMainTemplatePlugin';
 
 let angularConfig = { ...DEFAULT_ANGULAR_CONFIG, vendorChunk: false };
 describeBuilder(
   buildWebpackBrowserGenerate((options, context) => {
     return (config) => {
-      config.plugins.push(new NgNamedPlugin());
+      config.plugins.push(new NgNamedMainTemplatePlugin());
       return config;
     };
   }),
   BROWSER_BUILDER_INFO,
   (harness) => {
-    describe('NgNamedPlugin', () => {
+    describe('NgNamedMainTemplatePlugin', () => {
       it('可执行', async () => {
         harness.useTarget('build', angularConfig);
 

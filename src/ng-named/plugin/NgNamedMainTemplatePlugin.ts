@@ -1,7 +1,11 @@
 import { readFileSync } from 'fs';
 import * as webpack from 'webpack';
 import * as path from 'path';
-export class NgNamedPlugin {
+/** 
+ * ng声明命名插件
+ * 将插入一段脚本,用于保存导出的`声明命名`,及提供引入这些`声明命名`的方式
+ */
+export class NgNamedMainTemplatePlugin {
   constructor() {}
   apply(compiler: webpack.Compiler) {
     compiler.hooks.thisCompilation.tap('NgNamedPlugin', (compilation) => {
