@@ -2,45 +2,42 @@
 
 - 一个 ng 远程加载插件库
 
-## Plugin
+## ng-named
 
-### RemoteModuleMainTemplatePlugin
+- 主要用来在主项目中导出相关命名(组件,模块,服务,指令,管道及政策的 export 等)
+- 子项目正常引入主项目的资源,在构建时会自动的替换为引入函数
 
-- 普通模块转换为远程模块
-- 转换为由函数包裹的`JsonPCallback`方式,类似`webpack`的懒加载分包加载方式
+### 主项目使用
 
-### NgNamedPlugin
+- `NgNamedMainTemplatePlugin` 用于使用暴露导入导出函数
+- `webpack-ng-dll-plugin/dist/ng-named/loader/ng-named-export`(loader),用于将主项目中的引入命名增加导出,供子项目使用
 
-- `声明命名`
-- 将插入一段脚本,用于保存导出的`声明命名`,及提供引入这些`声明命名`的方式
+### 子项目使用
 
-### NgNamedImportPlugin
+- `NgNamedImportPlugin` 用于将子项目引入主项目的资源,转换为引入函数,在运行时通过函数获取到真正的主项目资源
 
-- 引入`声明命名`
-- 将项目中某些引入,转换为导入`声明命名`函数
+## remote
 
-### NgDllPlugin
+- 将子项目链接到主项目,使得主项目能正确的找到相关子项目
 
-- `webpack` `DllPlugin`的修改版本,用于实现 ng 的 dll
+### 主项目使用
 
-### RemoteModuleStartupPlugin
+- `RemoteModuleStartupMainTemplatePlugin` 用于加载远程项目,不过是单文件的加载
+- `RemoteModuleManifestStartupMainTemplatePlugin` 用于加载远程项目,支持一个清单,进行多个 js 文件,多个 css 文件的加载
 
-- 远程模块启动
-- 插入一段脚本,用于加载`RemoteModuleMainTemplatePlugin`处理过的项目
+### 子项目使用
 
-### RemoteModuleManifestStartupPlugin
+- `RemoteModuleManifestStartupMainTemplatePlugin` 使用类似`runtime`的方式加载到主项目中
 
-- 远程资源清单启动
-- 远程模块的加强版
-- 可以处理多个 js 及多个 css 的启动
-- 插入一段脚本,用于加载`RemoteModuleMainTemplatePlugin`处理过的项目
-- 使用此插件时需要先引入`RemoteModuleStartupPlugin`插件
+## dll
 
----
-## loader
+- 提取主项的依赖,并且通过`DllReferencePlugin`使主项目,子项目使用相同依赖
 
-### ng-named-export
+## 主项目
 
-- 将项目中已经导入被使用的`声明命名`导出,供远程模块使用
+- `NgDllPlugin` 参考`webpack`的`DllPlugin`
+- `DllReferencePlugin`
 
+## 子项目
 
+- `DllReferencePlugin`

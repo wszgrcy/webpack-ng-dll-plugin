@@ -1,10 +1,11 @@
 import webpack from 'webpack';
 const { ConcatSource } = require('webpack-sources');
 import { SyncWaterfallHook } from 'tapable';
-/** 远程模块启动
- * 插入一段脚本,用于加载`RemoteModuleMainTemplatePlugin`处理过的项目
+/** 
+ * 普通模块转换为远程模块
+ * 转换为由函数包裹的`JsonPCallback`方式,类似`webpack`的懒加载分包加载方式
  */
-export class RemoteModuleMainTemplatePlugin {
+export class LoadRemoteModulePlugin {
   private readonly varExpression = 'loadRemoteModuleJsonpCallback';
   /**
    *
@@ -14,7 +15,7 @@ export class RemoteModuleMainTemplatePlugin {
   constructor(private exportName?: string) {}
   apply(compiler: webpack.Compiler): void {
     compiler.hooks.thisCompilation.tap(
-      'RemoteModuleMainTemplatePlugin',
+      'LoadRemoteModulePlugin',
       (compilation) => {
         this.run(compilation);
       }
@@ -39,13 +40,13 @@ export class RemoteModuleMainTemplatePlugin {
 
     for (const template of [mainTemplate, chunkTemplate]) {
       ((template as any).hooks.renderWithEntry as SyncWaterfallHook).tap(
-        'RemoteModuleMainTemplatePlugin',
+        'LoadRemoteModulePlugin',
         onRenderWithEntry
       );
     }
 
     (mainTemplate.hooks as any).globalHashPaths.tap(
-      'RemoteModuleMainTemplatePlugin',
+      'LoadRemoteModulePlugin',
       (paths) => {
         if (this.varExpression) {
           paths.push(this.varExpression);
@@ -53,7 +54,7 @@ export class RemoteModuleMainTemplatePlugin {
         return paths;
       }
     );
-    mainTemplate.hooks.hash.tap('RemoteModuleMainTemplatePlugin', (hash) => {
+    mainTemplate.hooks.hash.tap('LoadRemoteModulePlugin', (hash) => {
       hash.update(`set remote module ${this.varExpression}`);
     });
   }
