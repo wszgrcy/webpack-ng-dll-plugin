@@ -3,3 +3,4 @@ node_modules
 src/**/*.js
 test-project-host-hello-world-app*
 coverage
+docs

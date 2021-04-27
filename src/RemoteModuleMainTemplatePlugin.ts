@@ -1,9 +1,16 @@
 import webpack from 'webpack';
 const { ConcatSource } = require('webpack-sources');
 import { SyncWaterfallHook } from 'tapable';
-/** 远程模块主模板 */
+/** 远程模块启动
+ * 插入一段脚本,用于加载`RemoteModuleMainTemplatePlugin`处理过的项目
+ */
 export class RemoteModuleMainTemplatePlugin {
-  varExpression = 'loadRemoteModuleJsonpCallback';
+  private readonly varExpression = 'loadRemoteModuleJsonpCallback';
+  /**
+   *
+   * @param exportName 导出命名,默认与文件名相同
+   *
+   */
   constructor(private exportName?: string) {}
   apply(compiler: webpack.Compiler): void {
     compiler.hooks.thisCompilation.tap(
@@ -13,7 +20,7 @@ export class RemoteModuleMainTemplatePlugin {
       }
     );
   }
-  run(compilation: webpack.compilation.Compilation): void {
+  private run(compilation: webpack.compilation.Compilation): void {
     const { mainTemplate, chunkTemplate } = compilation;
 
     const onRenderWithEntry = (source, chunk, hash) => {

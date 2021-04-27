@@ -1,13 +1,23 @@
 import * as webpack from 'webpack';
 import { NgNamedImportModule } from './NgNamedImportModule';
 import * as path from 'path';
+/**
+ * 引入`声明命名`
+ * 将项目中某些引入,转换为导入`声明命名`函数
+ */
 export class NgNamedImportPlugin {
+  /**
+   *
+   * @param folderList 指定导入的`声明命名`为某些文件夹内的文件,其`声明命名`转换为`声明命名`导入函数
+   * @param globalNamespace 目前没有使用
+   * 
+   */
   constructor(
     private folderList: string[],
     private globalNamespace: string = ''
   ) {}
 
-  isInFolder(filePath: string): boolean {
+  private isInFolder(filePath: string): boolean {
     return this.folderList.some(
       (item) => !path.relative(item, filePath).startsWith('..')
     );
