@@ -25,7 +25,9 @@ export class NgNamedImportModule extends NormalModule {
   createSource(source: string, resourceBuffer: Buffer, sourceMap) {
     source = Array.from(
       new Set(
-        this.options.dependencies
+        (this.reasons as any[])
+          .map((item) => item.dependency)
+          .filter((item) => item)
           .map((item) => item.id)
           .filter((item: string) => item)
       )
