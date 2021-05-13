@@ -10,11 +10,12 @@
 ### 主项目使用
 
 - `NgNamedMainTemplatePlugin` 用于使用暴露导入导出函数
-- `webpack-ng-dll-plugin/dist/ng-named/loader/ng-named-export`(loader),用于将主项目中的引入命名增加导出,供子项目使用
+- `webpack-ng-dll-plugin/dist/ng-named/loader/export`(loader),用于将主项目中的引入命名增加导出,供子项目使用
 
 ### 子项目使用
 
 - `NgNamedImportPlugin` 用于将子项目引入主项目的资源,转换为引入函数,在运行时通过函数获取到真正的主项目资源
+- 未来可能使用`webpack-ng-dll-plugin/dist/ng-named/loader/import`(loader) 代替插件
 
 ## remote
 
