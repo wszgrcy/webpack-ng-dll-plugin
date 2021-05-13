@@ -10,7 +10,7 @@ describe('ng-named-export', () => {
         resource: '../test/code.ts',
         loaders: [
           {
-            loader: path.resolve(__dirname, './ng-named-export.ts'),
+            loader: path.resolve(__dirname, './export.ts'),
             options: {
               excludeNamed: ['excludeNamed'],
               excludeRelation:{
