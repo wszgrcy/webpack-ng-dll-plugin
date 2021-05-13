@@ -58,5 +58,5 @@ export default function (this: webpack.loader.LoaderContext, data: string) {
         return generateImport(((item as any).name as ts.Identifier).text);
       }
     });
-  callback(null, `${data};${importList.join('\n')};`);
+  callback(null, `${importList.join('\n')};`);
 }
