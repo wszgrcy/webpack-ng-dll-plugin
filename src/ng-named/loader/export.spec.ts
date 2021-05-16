@@ -6,6 +6,13 @@ describe('ng-named-export', () => {
       {
         context: {
           resolve: (a, b, cb) => cb(null, './abc'),
+          _compilation: {
+            resolverFactory: {
+              get: () => {
+                return { resolve: (a1, a2, a3, a4, cb) => cb(null, './abc') };
+              },
+            },
+          },
         },
         resource: '../test/code.ts',
         loaders: [path.resolve(__dirname, './export.ts')],

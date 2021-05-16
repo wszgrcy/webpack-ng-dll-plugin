@@ -6,6 +6,13 @@ describe('ng-named-export', () => {
       {
         context: {
           resolve: (a, b, cb) => cb(null, './abc'),
+          _compilation: {
+            resolverFactory: {
+              get: () => {
+                return { resolve: (a1, a2, a3, a4, cb) => cb(null, './abc') };
+              },
+            },
+          },
         },
         resource: '../test/code.ts',
         loaders: [path.resolve(__dirname, './export.ts')],
@@ -15,10 +22,13 @@ describe('ng-named-export', () => {
             new Buffer(`import {a,b} from './abc';import {a,b} from './abc'`)
           );
         },
-      },
+      } as any,
       (err, result) => {
         expect(result.result[0]).toContain('window.exportNgNamed');
-        expect(((result.result[0] as any) as string).match(/window\.exportNgNamed/g).length).toBe(2);
+        expect(
+          (result.result[0] as any as string).match(/window\.exportNgNamed/g)
+            .length
+        ).toBe(2);
         done();
       }
     );

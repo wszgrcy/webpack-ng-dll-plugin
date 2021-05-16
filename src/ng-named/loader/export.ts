@@ -9,15 +9,24 @@ export interface NgNamedExportLoaderOptions {
 const exportNamedObject = {};
 
 export default function (this: webpack.loader.LoaderContext, data: string) {
+    let resolver = (
+    this._compilation as webpack.compilation.Compilation
+  ).resolverFactory.get('normal', {});
   let options: NgNamedExportLoaderOptions = this.query || {};
   let getAbsolutePath = (moduleSpecifier: string) => {
     return new Promise<string>((res, rej) => {
-      this.resolve(this.context, moduleSpecifier, (err, resource) => {
-        if (err) {
-          rej(err);
+      resolver.resolve(
+        { issuer: this.resourcePath },
+        this.context,
+        moduleSpecifier,
+        {},
+        (err, resource) => {
+          if (err) {
+            rej(err);
+          }
+          res(resource);
         }
-        res(resource);
-      });
+      );
     });
   };
   const callback = this.async();
@@ -31,9 +40,9 @@ export default function (this: webpack.loader.LoaderContext, data: string) {
     true
   );
   let selector = createCssSelectorForTs(sf);
-  let importDeclarationList = ((selector.queryAll(
-    'ImportDeclaration'
-  ) as any) as ts.ImportDeclaration[]).filter(
+  let importDeclarationList = (
+    selector.queryAll('ImportDeclaration') as any as ts.ImportDeclaration[]
+  ).filter(
     (item) =>
       item.importClause && ts.isNamedImports(item.importClause.namedBindings)
   );
@@ -49,8 +58,9 @@ export default function (this: webpack.loader.LoaderContext, data: string) {
           return;
         }
 
-        let namedList = (importDeclaration.importClause
-          .namedBindings as ts.NamedImports).elements;
+        let namedList = (
+          importDeclaration.importClause.namedBindings as ts.NamedImports
+        ).elements;
         namedList
           .map((item) => item.name.text)
           .forEach((named) => {
@@ -67,9 +77,12 @@ export default function (this: webpack.loader.LoaderContext, data: string) {
             }
             if (exportNamedObject[named]) {
               if (exportNamedObject[named] !== absolutePath) {
-                throw new Error(
+                console.warn(
                   `repeat namedExport in [${exportNamedObject[named]}] and [${absolutePath}]`
                 );
+                // throw new Error(
+                //   `repeat namedExport in [${exportNamedObject[named]}] and [${absolutePath}]`
+                // );
               } else {
                 return;
               }
@@ -80,10 +93,14 @@ export default function (this: webpack.loader.LoaderContext, data: string) {
       })
     );
   }
-  Promise.all(pathList).then(() => {
-    let exportModule = exportNamedList
-      .map((item) => `window.exportNgNamed('${item}',${item})`)
-      .join(';');
-    callback(null, `${data};${exportModule};`);
-  });
+  Promise.all(pathList)
+    .catch((rej) => {
+      console.warn(rej);
+    })
+    .then(() => {
+      let exportModule = exportNamedList
+        .map((item) => `window.exportNgNamed('${item}',${item})`)
+        .join(';');
+      callback(null, `${data};${exportModule};`);
+    });
 }
