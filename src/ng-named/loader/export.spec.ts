@@ -5,22 +5,23 @@ describe('ng-named-export', () => {
     runLoaders(
       {
         context: {
-          resolve: (a, b, cb) => cb(null, './abc'),
-          _compilation: {
-            resolverFactory: {
-              get: () => {
-                return { resolve: (a1, a2, a3, a4, cb) => cb(null, './abc') };
-              },
-            },
-          },
+          // resolve: (a, b, cb) => cb(null, './abc'),
+          // _compilation: {
+          //   resolverFactory: {
+          //     get: () => {
+          //       return { resolve: (a1, a2, a3, a4, cb) => cb(null, './abc') };
+          //     },
+          //   },
+          // },
         },
         resource: '../test/code.ts',
         loaders: [path.resolve(__dirname, './export.ts')],
         readResource: (file, callback) => {
-          callback(null, new Buffer(`import {a,b} from './abc'`));
+          callback(null, new Buffer(`export const a=''`));
         },
       },
       (err, result) => {
+        console.log(result.result[0])
         expect(result.result[0]).toContain('window.exportNgNamed');
         done();
       }

@@ -5,14 +5,14 @@ describe('ng-named-export', () => {
     runLoaders(
       {
         context: {
-          resolve: (a, b, cb) => cb(null, './abc'),
-          _compilation: {
-            resolverFactory: {
-              get: () => {
-                return { resolve: (a1, a2, a3, a4, cb) => cb(null, './abc') };
-              },
-            },
-          },
+          // resolve: (a, b, cb) => cb(null, './abc'),
+          // _compilation: {
+          //   resolverFactory: {
+          //     get: () => {
+          //       return { resolve: (a1, a2, a3, a4, cb) => cb(null, './abc') };
+          //     },
+          //   },
+          // },
         },
         resource: '../test/code.ts',
         loaders: [
@@ -20,11 +20,8 @@ describe('ng-named-export', () => {
             loader: path.resolve(__dirname, './export.ts'),
             options: {
               excludeNamed: ['excludeNamed'],
-              excludeRelation:{
-                b:`/exclude`
-              },
               filter:(filePath:string,named:string)=>{
-                if (filePath==='/exclude'&&named==='a') {
+                if (named==='filterFn') {
                   return true
                 }
                 return false
@@ -36,15 +33,19 @@ describe('ng-named-export', () => {
           callback(
             null,
             new Buffer(
-              `import {a,b} from './abc';import {excludeNamed,b,a} from '/exclude';`
+              `export const a='';export const excludeNamed='';export const filterFn=''`
             )
           );
         },
       },
       (err, result) => {
+        console.log(result.result[0])
         expect(result.result[0]).toContain('window.exportNgNamed');
         expect(result.result[0]).not.toContain(
           `window.exportNgNamed('excludeNamed',excludeNamed)`
+        );
+        expect(result.result[0]).not.toContain(
+          `window.exportNgNamed('filterFn',filterFn)`
         );
         done();
       }

@@ -1,34 +1,41 @@
 import webpack from 'webpack';
 import * as ts from 'typescript';
-import { createCssSelectorForTs } from 'cyia-code-util';
+const exportNamedObject = {};
+function generateExportFn(
+  absolutePath: string,
+  options: NgNamedExportLoaderOptions
+) {
+  return (named: string) => {
+    if (options.excludeNamed && options.excludeNamed.includes(named)) {
+      return;
+    }
+    if (
+      options.excludeRelation &&
+      options.excludeRelation[absolutePath] === named
+    ) {
+      return;
+    }
+    if (options.filter && options.filter(absolutePath, named)) {
+      return;
+    }
+    if (exportNamedObject[named] === absolutePath) {
+      console.warn(
+        `repeat namedExport in [${exportNamedObject[named]}] and [${absolutePath}]`
+      );
+    }
+    return `export const ${named} = window.exportNgNamed('${named}');`;
+  };
+}
 export interface NgNamedExportLoaderOptions {
   excludeNamed?: string[];
   excludeRelation?: Record<string, string>;
   filter?: (filePath: string, named: string) => boolean;
 }
-const exportNamedObject = {};
 
 export default function (this: webpack.loader.LoaderContext, data: string) {
-    let resolver = (
-    this._compilation as webpack.compilation.Compilation
-  ).resolverFactory.get('normal', {});
   let options: NgNamedExportLoaderOptions = this.query || {};
-  let getAbsolutePath = (moduleSpecifier: string) => {
-    return new Promise<string>((res, rej) => {
-      resolver.resolve(
-        { issuer: this.resourcePath },
-        this.context,
-        moduleSpecifier,
-        {},
-        (err, resource) => {
-          if (err) {
-            rej(err);
-          }
-          res(resource);
-        }
-      );
-    });
-  };
+  let generateExport = generateExportFn(this.resourcePath, options);
+
   const callback = this.async();
   if (!callback) {
     throw new Error('Invalid webpack version');
@@ -39,68 +46,43 @@ export default function (this: webpack.loader.LoaderContext, data: string) {
     ts.ScriptTarget.ESNext,
     true
   );
-  let selector = createCssSelectorForTs(sf);
-  let importDeclarationList = (
-    selector.queryAll('ImportDeclaration') as any as ts.ImportDeclaration[]
-  ).filter(
-    (item) =>
-      item.importClause && ts.isNamedImports(item.importClause.namedBindings)
-  );
-  let pathList = [];
-  let exportNamedList: string[] = [];
-  for (let i = 0; i < importDeclarationList.length; i++) {
-    const importDeclaration = importDeclarationList[i];
-    pathList.push(
-      getAbsolutePath(
-        (importDeclaration.moduleSpecifier as ts.StringLiteral).text
-      ).then((absolutePath: string) => {
-        if (absolutePath.includes('node_modules')) {
-          return;
+  let importList = sf.statements
+    .filter(
+      (item) =>
+        (item.modifiers &&
+          item.modifiers.some(
+            (item) => ts.SyntaxKind.ExportKeyword === item.kind
+          ) &&
+          item.modifiers.every(
+            (item) => ts.SyntaxKind.DefaultKeyword !== item.kind
+          )) ||
+        ts.isExportDeclaration(item)
+    )
+    .map((item) => {
+      if (ts.isExportDeclaration(item)) {
+        // export {xxx,yyy}
+        if (item.exportClause && !item.moduleSpecifier) {
+          if (ts.isNamespaceExport(item.exportClause)) {
+            return generateExport(item.exportClause.name.text);
+          } else if (ts.isNamedExports(item.exportClause)) {
+            return item.exportClause.elements
+              .map((item) => item.name.text)
+              .map((str) => generateExport(str))
+              .join('\n');
+          }
         }
-
-        let namedList = (
-          importDeclaration.importClause.namedBindings as ts.NamedImports
-        ).elements;
-        namedList
-          .map((item) => item.name.text)
-          .forEach((named) => {
-            if (options.excludeNamed && options.excludeNamed.includes(named)) {
-              return;
-            }
-            if (options.excludeRelation) {
-              if (options.excludeRelation[named] === absolutePath) {
-                return;
-              }
-            }
-            if (options.filter && options.filter(absolutePath, named)) {
-              return;
-            }
-            if (exportNamedObject[named]) {
-              if (exportNamedObject[named] !== absolutePath) {
-                console.warn(
-                  `repeat namedExport in [${exportNamedObject[named]}] and [${absolutePath}]`
-                );
-                // throw new Error(
-                //   `repeat namedExport in [${exportNamedObject[named]}] and [${absolutePath}]`
-                // );
-              } else {
-                return;
-              }
-            }
-            exportNamedObject[named] = absolutePath;
-            exportNamedList.push(named);
-          });
-      })
-    );
-  }
-  Promise.all(pathList)
-    .catch((rej) => {
-      console.warn(rej);
-    })
-    .then(() => {
-      let exportModule = exportNamedList
-        .map((item) => `window.exportNgNamed('${item}',${item})`)
-        .join(';');
-      callback(null, `${data};${exportModule};`);
+      }
+      // export const a='',b=''
+      else if (ts.isVariableStatement(item)) {
+        return item.declarationList.declarations
+          .map((node) => (node.name as ts.Identifier).text)
+          .map((str) => generateExport(str))
+          .join('\n');
+      }
+      // export function/class/interface
+      else {
+        return generateExport(((item as any).name as ts.Identifier).text);
+      }
     });
+  callback(null, `${data};${importList.join('\n')};`);
 }
