@@ -100,6 +100,10 @@ class NgFilterPlugin {
             (module.context || '').includes('$$_lazy_route_resource')
           ) {
             chunk.modulesIterable.delete(module);
+            continue;
+          }
+          if (!module.usedExports) {
+            chunk.modulesIterable.delete(module);
           }
         }
         return e;
@@ -122,25 +126,6 @@ class NgFilterPlugin {
                 module.usedExports = true;
                 module.addReason(null, null, this.explanation);
                 break;
-              case 'auto':
-                if (
-                  module.rawRequest &&
-                  this.unCompressMap.has(module.rawRequest)
-                ) {
-                  const oldIsUsed = module.isUsed;
-                  const unCompressList = this.unCompressMap.get(
-                    module.rawRequest
-                  );
-                  module.isUsed = function (name: string) {
-                    if (unCompressList.includes(name)) {
-                      return name;
-                    }
-                    return oldIsUsed.call(this, name);
-                  };
-                }
-                module.addReason(null, null, this.explanation);
-                this.setUnCompressMap(module);
-                break;
               case 'filter':
                 if (this.options.filter(module)) {
                   Object.defineProperty(module, 'used', {
@@ -152,6 +137,8 @@ class NgFilterPlugin {
                   // module.used = true;
                   module.usedExports = true;
                   module.addReason(null, null, this.explanation);
+                } else {
+                  module.usedExports = false;
                 }
                 break;
               default:
@@ -161,35 +148,5 @@ class NgFilterPlugin {
         }
       );
     });
-  }
-
-  /**
-   * 查找模块中引用.不压缩名字的
-   *
-   * @author cyia
-   * @date 2020-10-08
-   * @param module
-   */
-  setUnCompressMap(module: NormalModule) {
-    if (!/node_modules/.test(module.context || '') && module.dependencies) {
-      if (module.dependencies && module.dependencies.length) {
-        module.dependencies.forEach((dependency) => {
-          if (
-            dependency.request &&
-            /(^(@angular(\/|\\)(core|common|router|platform-browser|forms))$)|rxjs/.test(
-              dependency.request
-            ) &&
-            dependency.id
-          ) {
-            const list: string[] =
-              this.unCompressMap.get(dependency.request) || [];
-            if (!list.includes(dependency.id)) {
-              list.push(dependency.id);
-            }
-            this.unCompressMap.set(dependency.request, list);
-          }
-        });
-      }
-    }
   }
 }
