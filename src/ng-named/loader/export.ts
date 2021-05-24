@@ -23,7 +23,7 @@ function generateExportFn(
         `repeat namedExport in [${exportNamedObject[named]}] and [${absolutePath}]`
       );
     }
-    return `export const ${named} = window.exportNgNamed('${named}');`;
+    return `window.exportNgNamed('${named}',${named});`;
   };
 }
 export interface NgNamedExportLoaderOptions {
