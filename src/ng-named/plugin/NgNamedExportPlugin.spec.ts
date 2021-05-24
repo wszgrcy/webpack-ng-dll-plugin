@@ -17,13 +17,12 @@ describeBuilder(
       );
       (config.entry as any).main.push(exportFile);
       config.plugins.push(
-        new NgNamedExportPlugin(
-          [path.resolve(context.workspaceRoot, 'src')],
-          undefined,
-          exportFile
-        )
+        new NgNamedExportPlugin(exportFile, {
+          path: path.resolve(context.workspaceRoot, 'dist', 'manifest.json'),
+          name: 'outputMain',
+        })
       );
-      config.output.library='outputMain'
+      config.output.library = 'outputMain';
       return config;
     };
   }),
@@ -33,9 +32,21 @@ describeBuilder(
       it('可执行', async () => {
         harness.useTarget('build', angularConfig);
         let result = await harness.executeOnce();
-        expect(harness.readFile('dist/testProject/main.js')).toContain('ShowInMainComponent');
-        expect(harness.readFile('dist/testProject/main.js')).toContain('module.exports = __webpack_require__;');
-        expect(harness.readFile('dist/testProject/main.js')).toContain('var outputMain');
+        expect(harness.readFile('dist/testProject/main.js')).toContain(
+          'ShowInMainComponent'
+        );
+        expect(harness.readFile('dist/testProject/main.js')).toContain(
+          'module.exports = __webpack_require__;'
+        );
+        expect(harness.readFile('dist/testProject/main.js')).toContain(
+          'var outputMain'
+        );
+        expect(harness.readFile('dist/manifest.json')).toContain(
+          `"outputMain"`
+        );
+        expect(harness.readFile('dist/manifest.json')).toContain(
+          'ShowInMainComponent'
+        );
       });
     });
   }

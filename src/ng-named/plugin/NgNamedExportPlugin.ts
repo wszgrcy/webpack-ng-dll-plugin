@@ -1,5 +1,7 @@
 import * as webpack from 'webpack';
 import { SyncWaterfallHook } from 'tapable';
+import * as path from 'path';
+import { ConcatSource } from 'webpack-sources';
 interface NormalModule extends webpack.compilation.Module {
   request: string;
   userRequest: string;
@@ -7,36 +9,58 @@ interface NormalModule extends webpack.compilation.Module {
   context: string | null;
   dependencies: any[];
 }
-/**
- * 引入`声明命名`
- * 将项目中某些引入,转换为导入`声明命名`函数
- */
+
+export class NgNamedExportPluginManifestOptions {
+  path: string;
+  format?: boolean = true;
+  name: string;
+  context?: string;
+  /** 入口名,目前只允许一个入口 */
+  entryName?: string = 'main';
+}
+
 export class NgNamedExportPlugin {
-  private explanation = 'NgNamedExportPlugin';
+  private readonly explanation = 'NgNamedExportPlugin';
+
   /**
    *
-   * @param folderList 指定导入的`声明命名`为某些文件夹内的文件,其`声明命名`转换为`声明命名`导入函数
-   * @param globalNamespace 目前没有使用
-   *
+   * @param exportFile 导出文件绝对路径,用于匹配导出模块,替换导出方式
+   * @param [manifestOptions]
+   * @memberof NgNamedExportPlugin
    */
   constructor(
-    private folderList: string[],
-    private globalNamespace: string = '',
-    private exportFile: string
-  ) {}
+    private exportFile: string,
+    private manifestOptions?: NgNamedExportPluginManifestOptions
+  ) {
+    this.manifestOptions = {
+      ...new NgNamedExportPluginManifestOptions(),
+      ...manifestOptions,
+    };
+  }
 
   apply(compiler: webpack.Compiler): void {
     compiler.hooks.thisCompilation.tap(
       'NgNamedExportPlugin',
       (compilation: webpack.compilation.Compilation) => {
-        const hooks: {
-          modules: SyncWaterfallHook<string, webpack.compilation.Chunk>;
-        } = compilation.mainTemplate.hooks as any;
         compilation.moduleTemplates.javascript.hooks.module.tap(
           'NgNamedExportPlugin',
-          (moduleSourcePostContent, module, options, dependencyTemplates) => {
+          (
+            moduleSourcePostContent: ConcatSource,
+            module,
+            options,
+            dependencyTemplates
+          ) => {
+            if (!module.context && (module as any).rootModule) {
+              module = (module as any).rootModule;
+            }
             if (module.userRequest && module.userRequest === this.exportFile) {
-              return `module.exports = __webpack_require__;`;
+              if (moduleSourcePostContent.add) {
+                moduleSourcePostContent.add(
+                  `\n;module.exports = __webpack_require__;\n`
+                );
+                return moduleSourcePostContent;
+              }
+              return `\n;module.exports = __webpack_require__;\n`
             }
             return moduleSourcePostContent;
           }
@@ -48,8 +72,12 @@ export class NgNamedExportPlugin {
           ] as SyncWaterfallHook<string, webpack.compilation.Chunk>[]
         ).forEach((hook) => {
           hook.tap('NgNamedExportPlugin', (e, chunk) => {
-            for (const module of chunk.modulesIterable as webpack.SortableSet<NormalModule>) {
+            for (let module of chunk.modulesIterable as webpack.SortableSet<NormalModule>) {
+              if (!module.context && (module as any).rootModule) {
+                module = (module as any).rootModule;
+              }
               if (
+                module.context &&
                 !module.context.includes('node_modules') &&
                 module.rawRequest
               ) {
@@ -75,6 +103,85 @@ export class NgNamedExportPlugin {
             }
             return e;
           });
+        });
+        compilation.hooks.optimizeDependencies.tap(
+          'NgFilterPlugin',
+          (modules) => {
+            for (const module of modules) {
+              module;
+            }
+          }
+        );
+      }
+    );
+
+    new NgNamedExportManifest(this.manifestOptions!).apply(compiler);
+  }
+}
+
+class NgNamedExportManifest {
+  constructor(private options: NgNamedExportPluginManifestOptions) {}
+
+  apply(compiler: webpack.Compiler) {
+    compiler.hooks.emit.tapAsync(
+      'NgNamedExportManifest',
+      (compilation: webpack.compilation.Compilation, callback) => {
+        let chunk = (compilation.chunks as webpack.compilation.Chunk[]).find(
+          (chunk) => chunk.name === this.options.entryName
+        );
+        const targetPath = compilation.getPath(this.options.path, {
+          hash: compilation.hash,
+          chunk,
+        });
+        const name =
+          this.options.name &&
+          compilation.getPath(this.options.name, {
+            hash: compilation.hash,
+            chunk,
+          });
+        const manifest = {
+          name,
+          content: [...chunk.modulesIterable]
+            .map((module: any) => {
+              let rootModule = module.context
+                ? module
+                : (module as any).rootModule;
+
+              if (!(rootModule.usedExports && rootModule.used)) {
+                return;
+              }
+              if (module.libIdent) {
+                const ident = module.libIdent({
+                  context: this.options.context || compiler.options.context,
+                });
+                if (ident) {
+                  return {
+                    ident,
+                    data: {
+                      id: module.id,
+                      buildMeta: module.buildMeta,
+                    },
+                  };
+                }
+              }
+            })
+            .filter(Boolean)
+            .filter((item) => !item.ident.includes('$$_lazy_route_resource'))
+            .reduce((obj, item) => {
+              obj[item.ident] = item.data;
+              return obj;
+            }, Object.create(null)),
+        };
+        const manifestContent = this.options.format
+          ? JSON.stringify(manifest, null, 2)
+          : JSON.stringify(manifest);
+        const content = Buffer.from(manifestContent, 'utf8');
+
+        compiler.outputFileSystem.mkdirp(path.dirname(targetPath), (err) => {
+          if (err) {
+            callback(err);
+          }
+          compiler.outputFileSystem.writeFile(targetPath, content, callback);
         });
       }
     );
