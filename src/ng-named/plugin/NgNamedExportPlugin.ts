@@ -60,55 +60,42 @@ export class NgNamedExportPlugin {
                 );
                 return moduleSourcePostContent;
               }
-              return `\n;module.exports = __webpack_require__;\n`
+              return `\n;module.exports = __webpack_require__;\n`;
             }
             return moduleSourcePostContent;
           }
         );
-        (
-          [
-            (compilation.mainTemplate as any).hooks.modules,
-            (compilation.chunkTemplate as any).hooks.modules,
-          ] as SyncWaterfallHook<string, webpack.compilation.Chunk>[]
-        ).forEach((hook) => {
-          hook.tap('NgNamedExportPlugin', (e, chunk) => {
-            for (let module of chunk.modulesIterable as webpack.SortableSet<NormalModule>) {
-              if (!module.context && (module as any).rootModule) {
-                module = (module as any).rootModule;
-              }
-              if (
-                module.context &&
-                !module.context.includes('node_modules') &&
-                module.rawRequest
-              ) {
-                if (module.userRequest === this.exportFile) {
-                  let deps = module.dependencies;
-                  deps
-                    .filter((dep) => dep.getResourceIdentifier())
-                    .map((dep) => dep.module)
-                    .filter((item) => item)
-                    .forEach((module) => {
-                      Object.defineProperty(module, 'used', {
-                        get() {
-                          return true;
-                        },
-                        set() {},
-                      });
-                      // module.used = true;
-                      module.usedExports = true;
-                      module.addReason(null, null, this.explanation);
-                    });
-                }
-              }
-            }
-            return e;
-          });
-        });
         compilation.hooks.optimizeDependencies.tap(
           'NgFilterPlugin',
           (modules) => {
+            let exportModule = modules.find(
+              (item) => (item as any).userRequest === this.exportFile
+            );
+            let requestSet = new Set();
+            ((exportModule as any).dependencies as any[])
+              .filter((dep) => dep.getResourceIdentifier())
+              .filter((dep) => dep.module)
+              .map((dep) => dep.module)
+              .forEach((item) => {
+                requestSet.add(item.userRequest);
+              });
             for (const module of modules) {
-              module;
+              let isExportModule = requestSet.has((module as any).userRequest);
+              if (isExportModule) {
+                // if ((module as any).userRequest.includes('index.ts')) {
+                //   continue
+                // }
+
+                Object.defineProperty(module, 'used', {
+                  get() {
+                    return true;
+                  },
+                  set() {},
+                });
+                // module.used = true;
+                module.usedExports = true;
+                module.addReason(null, null, this.explanation);
+              }
             }
           }
         );

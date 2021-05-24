@@ -7,7 +7,12 @@ import {
 import { NgNamedExportPlugin } from './NgNamedExportPlugin';
 import * as path from 'path';
 
-let angularConfig = { ...DEFAULT_ANGULAR_CONFIG };
+let angularConfig = {
+  ...DEFAULT_ANGULAR_CONFIG,
+  optimization: true,
+
+  buildOptimizer: true,
+};
 describeBuilder(
   buildWebpackBrowserGenerate((options, context) => {
     return (config) => {
