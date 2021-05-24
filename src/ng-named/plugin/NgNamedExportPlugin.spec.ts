@@ -33,6 +33,8 @@ describeBuilder(
       it('可执行', async () => {
         harness.useTarget('build', angularConfig);
         let result = await harness.executeOnce();
+        expect(harness.readFile('dist/testProject/main.js')).toContain('ShowInMainComponent');
+        expect(harness.readFile('dist/testProject/main.js')).toContain('module.exports = __webpack_require__;');
       });
     });
   }

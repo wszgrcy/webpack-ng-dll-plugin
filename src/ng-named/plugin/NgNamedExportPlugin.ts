@@ -32,36 +32,49 @@ export class NgNamedExportPlugin {
         const hooks: {
           modules: SyncWaterfallHook<string, webpack.compilation.Chunk>;
         } = compilation.mainTemplate.hooks as any;
+        compilation.moduleTemplates.javascript.hooks.module.tap(
+          'NgNamedExportPlugin',
+          (moduleSourcePostContent, module, options, dependencyTemplates) => {
+            if (module.userRequest && module.userRequest === this.exportFile) {
+              return `module.exports = __webpack_require__;`;
+            }
+            return moduleSourcePostContent;
+          }
+        );
         (
-          (compilation.chunkTemplate as any).hooks.modules as SyncWaterfallHook<
-            string,
-            webpack.compilation.Chunk
-          >
-        ).tap('NgNamedExportPlugin', (e, chunk) => {
-          for (const module of chunk.modulesIterable as webpack.SortableSet<NormalModule>) {
-            if (!module.context.includes('node_modules') && module.rawRequest) {
-              if (module.userRequest === this.exportFile) {
-                chunk.modulesIterable.delete(module);
-                let deps = module.dependencies;
-                deps
-                  .filter((dep) => dep.getResourceIdentifier())
-                  .map((dep) => dep.module)
-                  .filter((item) => item)
-                  .forEach((module) => {
-                    Object.defineProperty(module, 'used', {
-                      get() {
-                        return true;
-                      },
-                      set() {},
+          [
+            (compilation.mainTemplate as any).hooks.modules,
+            (compilation.chunkTemplate as any).hooks.modules,
+          ] as SyncWaterfallHook<string, webpack.compilation.Chunk>[]
+        ).forEach((hook) => {
+          hook.tap('NgNamedExportPlugin', (e, chunk) => {
+            for (const module of chunk.modulesIterable as webpack.SortableSet<NormalModule>) {
+              if (
+                !module.context.includes('node_modules') &&
+                module.rawRequest
+              ) {
+                if (module.userRequest === this.exportFile) {
+                  let deps = module.dependencies;
+                  deps
+                    .filter((dep) => dep.getResourceIdentifier())
+                    .map((dep) => dep.module)
+                    .filter((item) => item)
+                    .forEach((module) => {
+                      Object.defineProperty(module, 'used', {
+                        get() {
+                          return true;
+                        },
+                        set() {},
+                      });
+                      // module.used = true;
+                      module.usedExports = true;
+                      module.addReason(null, null, this.explanation);
                     });
-                    // module.used = true;
-                    module.usedExports = true;
-                    module.addReason(null, null, this.explanation);
-                  });
+                }
               }
             }
-          }
-          return e;
+            return e;
+          });
         });
       }
     );
