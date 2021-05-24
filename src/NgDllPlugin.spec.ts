@@ -61,59 +61,7 @@ describeBuilder(
     });
   }
 );
-describeBuilder(
-  buildWebpackBrowserGenerate((options, context) => {
-    return (config) => {
-      options;
-      context;
-      setNgDllPlugin(
-        config,
-        {
-          output: {
-            filename: 'dll.js',
-          },
-          ngDllPluginOptions: {
-            path: path.resolve(context.workspaceRoot, 'dist', 'manifest.json'),
-            name: 'Dll',
-            format: true,
-            filter: {
-              mode: 'auto',
-            },
-          },
-        },
-        options
-      );
-      return config;
-    };
-  }),
-  BROWSER_BUILDER_INFO,
-  (harness) => {
-    describe('NgDllPlugin', () => {
-      it('可执行', async () => {
-        harness.useTarget('build', angularConfig);
 
-        let result = await harness.executeOnce();
-
-        expect(harness.hasFile('dist/testProject/dll.js')).toBe(true);
-        let content = harness.readFile('dist/testProject/dll.js');
-        expect(content).toContain('var Dll =');
-        expect(harness.hasFile('dist/manifest.json'));
-
-        let manifest = harness.readFile('dist/manifest.json');
-        let manifestJson = JSON.parse(manifest);
-        expect(manifestJson.name).toBe('Dll');
-
-        expect(
-          Object.keys(manifestJson.content).some(
-            (name) =>
-              ['@angular/core', 'rxjs'].some((item) => name.includes(item)) &&
-              !name.includes('$$_lazy_route_resource')
-          )
-        ).toBe(true);
-      });
-    });
-  }
-);
 describeBuilder(
   buildWebpackBrowserGenerate((options, context) => {
     return (config) => {
@@ -164,6 +112,12 @@ describeBuilder(
               !name.includes('$$_lazy_route_resource')
           )
         ).toBe(true);
+        expect(
+          Object.keys(manifestJson.content).some((name) =>
+            ['angular'].some((item) => name.includes(item))
+          )
+        ).toBe(false);
+        console.log(manifestJson);
       });
     });
   }
