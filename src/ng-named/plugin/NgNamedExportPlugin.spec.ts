@@ -16,7 +16,6 @@ describeBuilder(
         'export-center.ts'
       );
       (config.entry as any).main.push(exportFile);
-      console.log('入口', config.entry);
       config.plugins.push(
         new NgNamedExportPlugin(
           [path.resolve(context.workspaceRoot, 'src')],
@@ -24,6 +23,7 @@ describeBuilder(
           exportFile
         )
       );
+      config.output.library='outputMain'
       return config;
     };
   }),
@@ -35,6 +35,7 @@ describeBuilder(
         let result = await harness.executeOnce();
         expect(harness.readFile('dist/testProject/main.js')).toContain('ShowInMainComponent');
         expect(harness.readFile('dist/testProject/main.js')).toContain('module.exports = __webpack_require__;');
+        expect(harness.readFile('dist/testProject/main.js')).toContain('var outputMain');
       });
     });
   }
