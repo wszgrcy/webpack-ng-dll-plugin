@@ -83,8 +83,32 @@ export class NgNamedExportPlugin {
               let isExportModule = requestSet.has((module as any).userRequest);
               if (isExportModule) {
                 // if ((module as any).userRequest.includes('index.ts')) {
-                //   continue
+                //   continue;
                 // }
+                let dep = (module as any).dependencies
+
+                  // Get reference info only for harmony Dependencies
+                  .map((dep) => {
+                    if (!(dep.request && dep.userRequest)) return null;
+                    if (!compilation) return dep.getReference();
+                    return (compilation as any).getDependencyReference(
+                      module,
+                      dep
+                    );
+                  })
+
+                  // Reference is valid and has a module
+                  // Dependencies are simple enough to concat them
+                  .filter(
+                    (ref) =>
+                      ref &&
+                      ref.module &&
+                      (Array.isArray(ref.importedNames) ||
+                        Array.isArray(ref.module.buildMeta.providedExports))
+                  )
+
+                  // Take the imported module
+                  .map((ref) => ref.module);
 
                 Object.defineProperty(module, 'used', {
                   get() {
@@ -94,7 +118,9 @@ export class NgNamedExportPlugin {
                 });
                 // module.used = true;
                 module.usedExports = true;
-                module.addReason(null, null, this.explanation);
+                if (dep.length === 0) {
+                  module.addReason(null, null, this.explanation);
+                }
               }
             }
           }
@@ -133,8 +159,15 @@ class NgNamedExportManifest {
               let rootModule = module.context
                 ? module
                 : (module as any).rootModule;
-
               if (!(rootModule.usedExports && rootModule.used)) {
+                return;
+              }
+              if (
+                module.reasons[0] &&
+                module.reasons[0].dependency &&
+                module.reasons[0].dependency.loc &&
+                module.reasons[0].dependency.loc.name
+              ) {
                 return;
               }
               if (module.libIdent) {
