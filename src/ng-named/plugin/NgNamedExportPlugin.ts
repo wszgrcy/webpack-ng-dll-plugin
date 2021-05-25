@@ -12,9 +12,8 @@ export class NgNamedExportPluginManifestOptions {
   entryName?: string = 'main';
 }
 
+const NgNamedExportPluginExplanation = 'NgNamedExportPlugin';
 export class NgNamedExportPlugin {
-  private readonly explanation = 'NgNamedExportPlugin';
-
   /**
    *
    * @param exportFile 导出文件绝对路径,用于匹配导出模块,替换导出方式
@@ -77,23 +76,9 @@ export class NgNamedExportPlugin {
               if (!isExportModule) {
                 continue;
               }
-              let dep = module.dependencies
-                .map((dep) => {
-                  if (!(dep.request && dep.userRequest)) return null;
-                  if (!compilation) return dep.getReference();
-                  return (compilation as any).getDependencyReference(
-                    module,
-                    dep
-                  );
-                })
-                .filter(
-                  (ref) =>
-                    ref &&
-                    ref.module &&
-                    (Array.isArray(ref.importedNames) ||
-                      Array.isArray(ref.module.buildMeta.providedExports))
-                )
-                .map((ref) => ref.module);
+              module.buildMeta = module.buildMeta || {};
+              module.buildMeta.moduleConcatenationBailout =
+                NgNamedExportPluginExplanation;
 
               Object.defineProperty(module, 'used', {
                 get() {
@@ -103,9 +88,7 @@ export class NgNamedExportPlugin {
               });
               // module.used = true;
               module.usedExports = true;
-              if (dep.length === 0) {
-                module.addReason(null, null, this.explanation);
-              }
+              module.addReason(null, null, NgNamedExportPluginExplanation);
             }
           }
         );
@@ -140,17 +123,10 @@ class NgNamedExportManifest {
           name,
           content: [...chunk.modulesIterable]
             .map((module: Module) => {
-              let rootModule = module.context
-                ? module
-                : module.rootModule;
-              if (!(rootModule.usedExports && rootModule.used)) {
-                return;
-              }
               if (
-                module.reasons[0] &&
-                module.reasons[0].dependency &&
-                module.reasons[0].dependency.loc &&
-                module.reasons[0].dependency.loc.name
+                !module.buildMeta ||
+                module.buildMeta.moduleConcatenationBailout !==
+                  NgNamedExportPluginExplanation
               ) {
                 return;
               }
@@ -163,7 +139,10 @@ class NgNamedExportManifest {
                     ident,
                     data: {
                       id: module.id,
-                      buildMeta: module.buildMeta,
+                      buildMeta: {
+                        ...module.buildMeta,
+                        moduleConcatenationBailout: undefined,
+                      },
                     },
                   };
                 }

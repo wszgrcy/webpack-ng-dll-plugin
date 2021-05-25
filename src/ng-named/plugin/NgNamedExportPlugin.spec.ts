@@ -55,6 +55,18 @@ describeBuilder(
         expect(harness.readFile('dist/manifest.json')).toContain(
           'ShowInMainComponent'
         );
+        expect(harness.readFile('dist/manifest.json')).toContain(
+          './src/app/normal.ts'
+        );
+        expect(harness.readFile('dist/manifest.json')).toContain(
+          './src/app/main.service.ts'
+        );
+        expect(harness.readFile('dist/manifest.json')).not.toContain(
+          'main.ts'
+        );
+        expect(harness.readFile('dist/manifest.json')).not.toContain(
+          'export-center.ts'
+        );
       });
     });
   }
