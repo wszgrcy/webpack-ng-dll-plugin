@@ -6,9 +6,12 @@ export interface Module extends webpack.compilation.Module {
   rawRequest: string | null;
   context: string | null;
   dependencies: Dependency[];
-  libIdent(...args):any
+  libIdent(...args): any;
   /** ConcatenatedModule */
-  rootModule?:Module
+  rootModule?: Module;
+  identifier(): any;
+  name: string;
+  sourceRequest:string
 }
 export interface Dependency {
   request?: string;
