@@ -7,7 +7,7 @@ import {
 } from '../../../test/test-builder/browser';
 import { NgNamedImportPlugin } from './NgNamedImportPlugin';
 import * as path from 'path';
-let angularConfig = { ...DEFAULT_ANGULAR_CONFIG };
+let angularConfig = { ...DEFAULT_SUB_ANGULAR_CONFIG };
 describeBuilder(
   buildWebpackBrowserGenerate((options, context) => {
     return (config) => {
