@@ -2,7 +2,7 @@ import * as webpack from 'webpack';
 import * as path from 'path';
 import { ConcatSource, Source } from 'webpack-sources';
 import { Module } from '../../types';
-
+import * as fs from 'fs-extra';
 export class NgNamedExportPluginManifestOptions {
   path: string;
   format?: boolean = true;
@@ -10,6 +10,7 @@ export class NgNamedExportPluginManifestOptions {
   context?: string;
   /** 入口名,目前只允许一个入口 */
   entryName?: string = 'main';
+  watchWrite?: boolean = false;
 }
 
 const NgNamedExportPluginExplanation = 'NgNamedExportPlugin';
@@ -101,7 +102,10 @@ export class NgNamedExportPlugin {
 
 class NgNamedExportManifest {
   constructor(private options: NgNamedExportPluginManifestOptions) {}
-
+  private writeUseFs(filePath: string, content: Buffer) {
+    fs.ensureDirSync(path.dirname(filePath));
+    fs.writeFileSync(filePath, content);
+  }
   apply(compiler: webpack.Compiler) {
     compiler.hooks.emit.tapAsync(
       'NgNamedExportManifest',
@@ -159,13 +163,17 @@ class NgNamedExportManifest {
           ? JSON.stringify(manifest, null, 2)
           : JSON.stringify(manifest);
         const content = Buffer.from(manifestContent, 'utf8');
-
-        compiler.outputFileSystem.mkdirp(path.dirname(targetPath), (err) => {
-          if (err) {
-            callback(err);
-          }
-          compiler.outputFileSystem.writeFile(targetPath, content, callback);
-        });
+        if (this.options.watchWrite) {
+          this.writeUseFs(targetPath, content);
+          callback();
+        } else {
+          compiler.outputFileSystem.mkdirp(path.dirname(targetPath), (err) => {
+            if (err) {
+              callback(err);
+            }
+            compiler.outputFileSystem.writeFile(targetPath, content, callback);
+          });
+        }
       }
     );
   }
