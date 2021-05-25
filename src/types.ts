@@ -1,5 +1,5 @@
 import * as webpack from 'webpack';
-
+/** webpack的module模块声明拓展,混合了多种类型,仅作为开发时的参考 */
 export interface Module extends webpack.compilation.Module {
   request: string;
   userRequest: string;
@@ -13,6 +13,8 @@ export interface Module extends webpack.compilation.Module {
   name: string;
   sourceRequest:string
 }
+/** webpack的dependency模块声明拓展,混合了多种类型,仅作为开发时的参考 */
+
 export interface Dependency {
   request?: string;
   userRequest?: string;
