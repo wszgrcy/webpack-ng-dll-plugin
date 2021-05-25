@@ -1,14 +1,7 @@
 import * as webpack from 'webpack';
-import { SyncWaterfallHook } from 'tapable';
 import * as path from 'path';
-import { ConcatSource } from 'webpack-sources';
-interface NormalModule extends webpack.compilation.Module {
-  request: string;
-  userRequest: string;
-  rawRequest: string | null;
-  context: string | null;
-  dependencies: any[];
-}
+import { ConcatSource, Source } from 'webpack-sources';
+import { Module } from '../../types';
 
 export class NgNamedExportPluginManifestOptions {
   path: string;
@@ -45,7 +38,7 @@ export class NgNamedExportPlugin {
         compilation.moduleTemplates.javascript.hooks.module.tap(
           'NgNamedExportPlugin',
           (
-            moduleSourcePostContent: ConcatSource,
+            moduleSourcePostContent: Source,
             module,
             options,
             dependencyTemplates
@@ -54,8 +47,8 @@ export class NgNamedExportPlugin {
               module = (module as any).rootModule;
             }
             if (module.userRequest && module.userRequest === this.exportFile) {
-              if (moduleSourcePostContent.add) {
-                moduleSourcePostContent.add(
+              if ((moduleSourcePostContent as ConcatSource).add) {
+                (moduleSourcePostContent as ConcatSource).add(
                   `\n;module.exports = __webpack_require__;\n`
                 );
                 return moduleSourcePostContent;
@@ -67,12 +60,12 @@ export class NgNamedExportPlugin {
         );
         compilation.hooks.optimizeDependencies.tap(
           'NgFilterPlugin',
-          (modules) => {
+          (modules: Module[]) => {
             let exportModule = modules.find(
-              (item) => (item as any).userRequest === this.exportFile
+              (item) => item.userRequest === this.exportFile
             );
             let requestSet = new Set();
-            ((exportModule as any).dependencies as any[])
+            exportModule.dependencies
               .filter((dep) => dep.getResourceIdentifier())
               .filter((dep) => dep.module)
               .map((dep) => dep.module)
@@ -80,47 +73,38 @@ export class NgNamedExportPlugin {
                 requestSet.add(item.userRequest);
               });
             for (const module of modules) {
-              let isExportModule = requestSet.has((module as any).userRequest);
-              if (isExportModule) {
-                // if ((module as any).userRequest.includes('index.ts')) {
-                //   continue;
-                // }
-                let dep = (module as any).dependencies
+              let isExportModule = requestSet.has(module.userRequest);
+              if (!isExportModule) {
+                continue;
+              }
+              let dep = module.dependencies
+                .map((dep) => {
+                  if (!(dep.request && dep.userRequest)) return null;
+                  if (!compilation) return dep.getReference();
+                  return (compilation as any).getDependencyReference(
+                    module,
+                    dep
+                  );
+                })
+                .filter(
+                  (ref) =>
+                    ref &&
+                    ref.module &&
+                    (Array.isArray(ref.importedNames) ||
+                      Array.isArray(ref.module.buildMeta.providedExports))
+                )
+                .map((ref) => ref.module);
 
-                  // Get reference info only for harmony Dependencies
-                  .map((dep) => {
-                    if (!(dep.request && dep.userRequest)) return null;
-                    if (!compilation) return dep.getReference();
-                    return (compilation as any).getDependencyReference(
-                      module,
-                      dep
-                    );
-                  })
-
-                  // Reference is valid and has a module
-                  // Dependencies are simple enough to concat them
-                  .filter(
-                    (ref) =>
-                      ref &&
-                      ref.module &&
-                      (Array.isArray(ref.importedNames) ||
-                        Array.isArray(ref.module.buildMeta.providedExports))
-                  )
-
-                  // Take the imported module
-                  .map((ref) => ref.module);
-
-                Object.defineProperty(module, 'used', {
-                  get() {
-                    return true;
-                  },
-                  set() {},
-                });
-                // module.used = true;
-                module.usedExports = true;
-                if (dep.length === 0) {
-                  module.addReason(null, null, this.explanation);
-                }
+              Object.defineProperty(module, 'used', {
+                get() {
+                  return true;
+                },
+                set() {},
+              });
+              // module.used = true;
+              module.usedExports = true;
+              if (dep.length === 0) {
+                module.addReason(null, null, this.explanation);
               }
             }
           }
@@ -155,10 +139,10 @@ class NgNamedExportManifest {
         const manifest = {
           name,
           content: [...chunk.modulesIterable]
-            .map((module: any) => {
+            .map((module: Module) => {
               let rootModule = module.context
                 ? module
-                : (module as any).rootModule;
+                : module.rootModule;
               if (!(rootModule.usedExports && rootModule.used)) {
                 return;
               }

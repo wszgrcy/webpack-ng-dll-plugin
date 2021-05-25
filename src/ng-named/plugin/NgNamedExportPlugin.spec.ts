@@ -40,9 +40,12 @@ describeBuilder(
         expect(harness.readFile('dist/testProject/main.js')).toContain(
           'ShowInMainComponent'
         );
-        expect(harness.readFile('dist/testProject/main.js')).toContain(
-          'module.exports = __webpack_require__;'
-        );
+        if (!(angularConfig.buildOptimizer&&angularConfig.optimization)) {
+          expect(harness.readFile('dist/testProject/main.js')).toContain(
+            'module.exports = __webpack_require__;'
+          );
+          
+        }
         expect(harness.readFile('dist/testProject/main.js')).toContain(
           'var outputMain'
         );
