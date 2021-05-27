@@ -25,6 +25,7 @@ describeBuilder(
         new NgNamedExportPlugin(exportFile, {
           path: path.resolve(context.workspaceRoot, 'dist', 'manifest.json'),
           name: 'outputMain',
+          context:path.join(context.workspaceRoot,'../','remote-main')
         })
       );
       config.output.library = 'outputMain';
@@ -33,7 +34,7 @@ describeBuilder(
   }),
   BROWSER_BUILDER_INFO,
   (harness) => {
-    describe('NgNamedExportPlugin', () => {
+    describe('NgNamedExportPlugin-context', () => {
       it('可执行', async () => {
         harness.useTarget('build', angularConfig);
         let result = await harness.executeOnce();
@@ -56,9 +57,15 @@ describeBuilder(
           'ShowInMainComponent'
         );
         expect(harness.readFile('dist/manifest.json')).toContain(
-          './src/app/normal.ts'
+          '/src/app/normal.ts'
         );
         expect(harness.readFile('dist/manifest.json')).toContain(
+          '/src/app/main.service.ts'
+        );
+        expect(harness.readFile('dist/manifest.json')).not.toContain(
+          './src/app/normal.ts'
+        );
+        expect(harness.readFile('dist/manifest.json')).not.toContain(
           './src/app/main.service.ts'
         );
         expect(harness.readFile('dist/manifest.json')).not.toContain(
