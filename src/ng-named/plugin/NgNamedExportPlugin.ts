@@ -23,7 +23,7 @@ export class NgNamedExportPlugin {
    */
   constructor(
     private exportFile: string,
-    private manifestOptions?: NgNamedExportPluginManifestOptions
+    private manifestOptions: NgNamedExportPluginManifestOptions
   ) {
     this.manifestOptions = {
       ...new NgNamedExportPluginManifestOptions(),
