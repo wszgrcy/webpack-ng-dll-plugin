@@ -117,7 +117,6 @@ describeBuilder(
             ['angular'].some((item) => name.includes(item))
           )
         ).toBe(false);
-        console.log(manifestJson);
       });
     });
   }
