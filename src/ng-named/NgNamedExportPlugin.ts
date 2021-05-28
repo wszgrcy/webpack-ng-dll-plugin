@@ -4,21 +4,27 @@ import { ConcatSource, Source } from 'webpack-sources';
 import { Module } from '../types';
 import * as fs from 'fs-extra';
 export class NgNamedExportPluginManifestOptions {
+  /** 与LibManifestPlugin相同,资源文件生成的路径 */
   path: string;
+  /** 与LibManifestPlugin相同,格式化资源文件 */
   format?: boolean = true;
-  name: string;
+  /** 与LibManifestPlugin相同,链接库名字(与output.library相同) */
+  name: string; 
+  /** 与LibManifestPlugin相同,依赖上下文(决定导出依赖的路径) */
   context?: string;
   /** 入口名,目前只允许一个入口 */
   entryName?: string = 'main';
+  /** 是否在watch模式下写入到磁盘上(fs) */
   watchWrite?: boolean = false;
 }
 
 const NgNamedExportPluginExplanation = 'NgNamedExportPlugin';
+/** 命名导出插件,是执行脚本,同时返回导出的命名 */
 export class NgNamedExportPlugin {
   /**
    *
    * @param exportFile 导出文件绝对路径,用于匹配导出模块,替换导出方式
-   * @param [manifestOptions]
+   * @param [manifestOptions] 资源清单配置
    * @memberof NgNamedExportPlugin
    */
   constructor(

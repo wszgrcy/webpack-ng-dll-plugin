@@ -1,12 +1,12 @@
 import * as webpack from 'webpack';
 import * as path from 'path';
 import { Module } from '../types';
-
+/** 检查导入的命名是否是已经导出 */
 export class NgNamedImportCheckPlugin {
   /**
    *
-   * @param folderList 包含文件夹内会进行检查
-   * @param filter 返回false为警告
+   * @param [folderList=[]] 包含在文件夹内的文件会进行检查
+   * @param [filter] 返回false为警告
    * @memberof NgNamedImportCheckPlugin
    */
   constructor(
