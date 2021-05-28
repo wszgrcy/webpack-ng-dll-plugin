@@ -1,6 +1,6 @@
 import * as webpack from 'webpack';
 import * as path from 'path';
-import { Module } from '../../types';
+import { Module } from '../types';
 
 export class NgNamedImportCheckPlugin {
   /**

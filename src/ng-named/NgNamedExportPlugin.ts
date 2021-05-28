@@ -1,7 +1,7 @@
 import * as webpack from 'webpack';
 import * as path from 'path';
 import { ConcatSource, Source } from 'webpack-sources';
-import { Module } from '../../types';
+import { Module } from '../types';
 import * as fs from 'fs-extra';
 export class NgNamedExportPluginManifestOptions {
   path: string;

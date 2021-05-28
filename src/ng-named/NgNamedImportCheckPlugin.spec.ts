@@ -1,10 +1,10 @@
-import { describeBuilder } from '../../../test/plugin-describe-builder';
+import { describeBuilder } from '../../test/plugin-describe-builder';
 import {
   BROWSER_BUILDER_INFO,
   buildWebpackBrowserGenerate,
   DEFAULT_ANGULAR_CONFIG,
   DEFAULT_SUB_ANGULAR_CONFIG,
-} from '../../../test/test-builder/browser';
+} from '../../test/test-builder/browser';
 import * as path from 'path';
 import { NgNamedImportCheckPlugin } from './NgNamedImportCheckPlugin';
 import webpack from 'webpack';

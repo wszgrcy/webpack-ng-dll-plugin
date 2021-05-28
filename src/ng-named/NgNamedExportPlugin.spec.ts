@@ -1,9 +1,9 @@
-import { describeBuilder } from '../../../test/plugin-describe-builder';
+import { describeBuilder } from '../../test/plugin-describe-builder';
 import {
   BROWSER_BUILDER_INFO,
   buildWebpackBrowserGenerate,
   DEFAULT_ANGULAR_CONFIG,
-} from '../../../test/test-builder/browser';
+} from '../../test/test-builder/browser';
 import { NgNamedExportPlugin } from './NgNamedExportPlugin';
 import * as path from 'path';
 
