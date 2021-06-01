@@ -34,7 +34,7 @@ describeBuilder(
   }),
   BROWSER_BUILDER_INFO,
   (harness) => {
-    describe('NgNamedExportPlugin-context', () => {
+    describe('NgNamedExportPlugin', () => {
       it('可执行', async () => {
         harness.useTarget('build', angularConfig);
         let result = await harness.executeOnce();
@@ -73,6 +73,10 @@ describeBuilder(
         );
         expect(harness.readFile('dist/manifest.json')).not.toContain(
           'export-center.ts'
+        );
+        // 修复导出依赖被异常摇树
+        expect(harness.readFile('dist/testProject/main.js')).not.toContain(
+          'console.log(void 0)'
         );
       });
     });

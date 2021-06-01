@@ -9,7 +9,7 @@ export class NgNamedExportPluginManifestOptions {
   /** 与LibManifestPlugin相同,格式化资源文件 */
   format?: boolean = true;
   /** 与LibManifestPlugin相同,链接库名字(与output.library相同) */
-  name: string; 
+  name: string;
   /** 与LibManifestPlugin相同,依赖上下文(决定导出依赖的路径) */
   context?: string;
   /** 入口名,目前只允许一个入口 */
@@ -64,13 +64,13 @@ export class NgNamedExportPlugin {
             return moduleSourcePostContent;
           }
         );
+        let requestSet = new Set();
         compilation.hooks.optimizeDependencies.tap(
-          'NgFilterPlugin',
+          'NgNamedExportPlugin',
           (modules: Module[]) => {
             let exportModule = modules.find(
               (item) => item.userRequest === this.exportFile
             );
-            let requestSet = new Set();
             exportModule.dependencies
               .filter((dep) => dep.getResourceIdentifier())
               .filter((dep) => dep.module)
@@ -86,7 +86,17 @@ export class NgNamedExportPlugin {
               module.buildMeta = module.buildMeta || {};
               module.buildMeta.moduleConcatenationBailout =
                 NgNamedExportPluginExplanation;
-
+            }
+          }
+        );
+        compilation.hooks.optimizeDependenciesAdvanced.tap(
+          'NgNamedExportPlugin',
+          (modules: Module[]) => {
+            for (const module of modules) {
+              let isExportModule = requestSet.has(module.userRequest);
+              if (!isExportModule) {
+                continue;
+              }
               Object.defineProperty(module, 'used', {
                 get() {
                   return true;
@@ -102,11 +112,11 @@ export class NgNamedExportPlugin {
       }
     );
 
-    new NgNamedExportManifest(this.manifestOptions!).apply(compiler);
+    new NgNamedExportManifestPlugin(this.manifestOptions!).apply(compiler);
   }
 }
 
-class NgNamedExportManifest {
+export class NgNamedExportManifestPlugin {
   constructor(private options: NgNamedExportPluginManifestOptions) {}
   private writeUseFs(filePath: string, content: Buffer) {
     fs.ensureDirSync(path.dirname(filePath));
