@@ -34,7 +34,7 @@ jobs:
       - uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_PUBLISH_TOKEN }}
-      - if: steps.publish.outputs.type != 'none'
+      - if: steps.publish.outputs.type != ''
         run: |
           echo "[${{ steps.publish.outputs.type }}]Version changed: ${{ steps.publish.outputs.old-version }} => ${{ steps.publish.outputs.version }}"
       - name: build-docs
@@ -47,6 +47,8 @@ jobs:
           rm -rf .*
           cp -rp ../dist/* .
           cp ./index.html 404.html
+        env:
+          INPUT_TOKEN: ''
       - name: tag
         run: |
           git status
