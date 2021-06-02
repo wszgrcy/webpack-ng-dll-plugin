@@ -8,6 +8,6 @@
     "sourceMap": false,
     "declaration": false,
     "declarationMap": false,
-    "outDir": "src/"
+    "outDir": "src/remote"
   }
 }
