@@ -31,10 +31,11 @@ jobs:
       - name: build
         run: |
           yarn build
-      - uses: JS-DevTools/npm-publish@v1
+      - id: publish
+        uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_PUBLISH_TOKEN }}
-      - if: steps.publish.outputs.type != ''
+      - if: steps.publish.outputs.type != 'none'
         run: |
           echo "[${{ steps.publish.outputs.type }}]Version changed: ${{ steps.publish.outputs.old-version }} => ${{ steps.publish.outputs.version }}"
       - name: build-docs
