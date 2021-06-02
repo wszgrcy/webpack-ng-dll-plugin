@@ -7,11 +7,13 @@ export class NgNamedImportCheckPlugin {
    *
    * @param [folderList=[]] 包含在文件夹内的文件会进行检查
    * @param [filter] 返回false为警告
+   * @param [customHint] 自定义提示警告
    * @memberof NgNamedImportCheckPlugin
    */
   constructor(
     private folderList: string[] = [],
-    private filter?: (module: Module) => boolean
+    private filter?: (module: Module) => boolean,
+    private customHint?: (module: Module) => void
   ) {}
   private isInFolder(filePath: string): boolean {
     return this.folderList.some(
@@ -34,7 +36,7 @@ export class NgNamedImportCheckPlugin {
                 this.warnHint(module);
                 continue;
               }
-              // 代理模块判断
+              // 代理模块判断,防止多个webpack没有使用instanceof判断
               if (
                 module.identifier &&
                 module.identifier() ===
@@ -53,7 +55,11 @@ export class NgNamedImportCheckPlugin {
       }
     );
   }
-  warnHint(module: Module) {
-    console.warn(`${module.userRequest} 没有使用引用`);
+  private warnHint(module: Module) {
+    if (this.customHint) {
+      this.customHint(module);
+    } else {
+      console.warn(`${module.userRequest} 没有使用引用`);
+    }
   }
 }
