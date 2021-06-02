@@ -25,6 +25,15 @@ jobs:
       - name: install-dependencies
         run: |
           yarn
+      # - name: test
+      #   run: |
+      #     yarn test
+      # - name: publish
+      #   run: |
+      #     yarn build
+      #     npm publish
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
       - name: build
         run: |
           yarn deploy
@@ -38,6 +47,6 @@ jobs:
         run: |
           git status
           git add -A
-          git commit -m 'build: 页面构建'
-          git push --force "${REPOSITORY_PATH}${GITHUB_REPOSITORY}.git" gh-pages
+          HUSKY=0 git commit -m 'build: 页面构建'
+          HUSKY=0 git push --force "${REPOSITORY_PATH}${GITHUB_REPOSITORY}.git" gh-pages
           # git pull
