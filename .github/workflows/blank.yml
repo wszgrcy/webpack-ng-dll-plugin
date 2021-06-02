@@ -44,10 +44,9 @@ jobs:
           git branch gh-pages
           git checkout gh-pages
           rm -rf *
+          rm -rf .*
           cp -rp ../dist/* .
           cp ./index.html 404.html
-        env:
-          INPUT_TOKEN: ''
       - name: tag
         run: |
           git status
