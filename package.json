@@ -10,7 +10,8 @@
     "build": "rimraf ./dist&& tsc",
     "build:template:dev": "tsc --build tsconfig.template-dev.json",
     "postbuild": "tsc --build tsconfig.template.json",
-    "deploy": "typedoc --out docs src/index.ts"
+    "deploy": "typedoc --out docs src/index.ts",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
@@ -40,13 +41,18 @@
     "@angular/platform-browser": "^11.2.11",
     "@angular/platform-browser-dynamic": "^11.2.11",
     "@angular/platform-server": "^11.2.11",
+    "@commitlint/cli": "^12.1.4",
+    "@commitlint/config-conventional": "^12.1.4",
     "@types/fs-extra": "^9.0.11",
     "@types/jest": "^26.0.22",
     "@types/loader-runner": "^2.2.3",
     "@types/webpack": "^4.41.22",
     "cpx": "^1.5.0",
+    "husky": "^6.0.0",
     "jest": "^26.6.3",
     "loader-runner": "^4.2.0",
+    "prettier": "^2.3.0",
+    "pretty-quick": "^3.1.0",
     "rimraf": "^3.0.2",
     "rxjs": "^6.6.7",
     "ts-jest": "^26.5.4",
