@@ -4,3 +4,5 @@ src/**/*.js
 test-project-host-hello-world-app*
 coverage
 docs
+yarn-error.log
+.vscode
