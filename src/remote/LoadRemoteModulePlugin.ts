@@ -27,31 +27,25 @@ export class LoadRemoteModulePlugin {
   private run(compilation: webpack.compilation.Compilation): void {
     const { mainTemplate, chunkTemplate } = compilation;
 
-    const onRenderWithEntry = (
-      source,
-      chunk: webpack.compilation.Chunk,
-      hash
-    ) => {
-      if (!this.entryNames.includes(chunk.name)) {
-        return source;
-      }
-      const pathAndInfo = (compilation as any).getPathWithInfo(
-        compilation.outputOptions.filename,
-        { chunk, contentHashType: 'javascript', hash }
-      );
-      return new ConcatSource(
-        `loadRemoteModuleJsonpCallback('${
-          this.exportName || pathAndInfo.path
-        }',`,
-        source,
-        `)`
-      );
-    };
-
     for (const template of [mainTemplate, chunkTemplate]) {
       ((template as any).hooks.renderWithEntry as SyncWaterfallHook).tap(
         'LoadRemoteModulePlugin',
-        onRenderWithEntry
+        (source, chunk: webpack.compilation.Chunk, hash) => {
+          if (!this.entryNames.includes(chunk.name)) {
+            return source;
+          }
+          const pathAndInfo = (compilation as any).getPathWithInfo(
+            compilation.outputOptions.filename,
+            { chunk, contentHashType: 'javascript', hash }
+          );
+          return new ConcatSource(
+            `loadRemoteModuleJsonpCallback('${
+              this.exportName || pathAndInfo.path
+            }',`,
+            source,
+            `)`
+          );
+        }
       );
     }
 
