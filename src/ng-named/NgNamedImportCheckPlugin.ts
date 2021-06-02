@@ -59,7 +59,7 @@ export class NgNamedImportCheckPlugin {
     if (this.customHint) {
       this.customHint(module);
     } else {
-      console.warn(`${module.userRequest} 没有使用引用`);
+      console.warn(`${module.userRequest} not export from main project!`);
     }
   }
 }
