@@ -9,3 +9,4 @@ tsconfig.template-dev.json
 coverage
 .github
 docs
+.vscode
