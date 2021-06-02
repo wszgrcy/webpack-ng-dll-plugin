@@ -38,6 +38,6 @@ jobs:
         run: |
           git status
           git add -A
-          git commit -m '页面构建'
+          git commit -m 'build: 页面构建'
           git push --force "${REPOSITORY_PATH}${GITHUB_REPOSITORY}.git" gh-pages
           # git pull
