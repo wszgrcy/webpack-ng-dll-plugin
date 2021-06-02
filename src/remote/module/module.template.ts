@@ -1,7 +1,9 @@
 (() => {
   let loadedRemoteModuleMap: { [name: string]: Promise<any> } = {};
   /** 加载时的map */
-  let loadingRemoteModuleMap: { [name: string]: (param) => void } = {};
+  let loadingRemoteModuleMap: {
+    [name: string]: { resolve: (param) => void; reject: (param) => void };
+  } = {};
   function getDefaultModuleName(name = ''): string {
     return name.split(/(\/|\\)/g).pop();
   }
@@ -10,8 +12,8 @@
     url: string | HTMLScriptElement,
     moduleName?: string
   ): Promise<any> {
-    if (typeof url === 'string') {
-      !moduleName && (moduleName = getDefaultModuleName(url));
+    if (typeof url === 'string' && !moduleName) {
+      moduleName = getDefaultModuleName(url);
     }
     if (loadedRemoteModuleMap[moduleName]) {
       return loadedRemoteModuleMap[moduleName];
@@ -23,7 +25,7 @@
       reject = rej;
     });
     loadedRemoteModuleMap[moduleName] = promise;
-    loadingRemoteModuleMap[moduleName] = resolve;
+    loadingRemoteModuleMap[moduleName] = { resolve, reject };
     requireEnsure(url, reject, moduleName);
     return promise;
   }
@@ -33,11 +35,11 @@
     module: { [name: string]: any }
   ): void {
     if (loadingRemoteModuleMap[name] && module) {
-      loadingRemoteModuleMap[name](module);
+      loadingRemoteModuleMap[name].resolve(module);
       delete loadingRemoteModuleMap[name];
     } else {
       console.error('moduleName:', name, ',moduleExport:', module);
-      throw new Error(`no ${name} found`);
+      loadingRemoteModuleMap[name].reject(`no ${name} found`);
     }
   }
   (window as any).loadRemoteModule = loadRemoteModule;
@@ -59,7 +61,7 @@
     let onScriptComplete;
     script.charset = 'utf-8';
     (script as any).timeout = 120;
-    onScriptComplete = (event) => {
+    onScriptComplete = (event: Event) => {
       script.onerror = script.onload = null;
       clearTimeout(timeout);
       if (event.type === 'timeout') {
