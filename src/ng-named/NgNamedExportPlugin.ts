@@ -1,6 +1,6 @@
 import * as webpack from 'webpack';
 import * as path from 'path';
-import { ConcatSource, Source } from 'webpack-sources';
+import { Source } from 'webpack-sources';
 import { Module } from '../types';
 import * as fs from 'fs-extra';
 export class NgNamedExportPluginManifestOptions {
@@ -49,16 +49,16 @@ export class NgNamedExportPlugin {
             options,
             dependencyTemplates
           ) => {
-            if (!module.context && (module as any).rootModule) {
-              module = (module as any).rootModule;
-            }
             if (module.userRequest && module.userRequest === this.exportFile) {
               return `\n;module.exports = __webpack_require__;\n`;
             }
             return moduleSourcePostContent;
           }
         );
-        let requestSet = new Set();
+        /**
+         * 要导出的请求
+         * 由于optimizeDependenciesAdvanced钩子发生在optimizeDependencies之后,所以可以采取这种方式传参 */
+        let requestSet = new Set<string>();
         compilation.hooks.optimizeDependencies.tap(
           'NgNamedExportPlugin',
           (modules: Module[]) => {
@@ -67,14 +67,15 @@ export class NgNamedExportPlugin {
             );
             exportModule.dependencies
               .filter((dep) => dep.getResourceIdentifier())
-              .filter((dep) => dep.module)
+              .filter((item) => item)
               .map((dep) => dep.module)
+              .filter((item) => item)
+              .filter((item) => item.userRequest)
               .forEach((item) => {
                 requestSet.add(item.userRequest);
               });
             for (const module of modules) {
-              let isExportModule = requestSet.has(module.userRequest);
-              if (!isExportModule) {
+              if (!requestSet.has(module.userRequest)) {
                 continue;
               }
               module.buildMeta = module.buildMeta || {};
@@ -87,8 +88,7 @@ export class NgNamedExportPlugin {
           'NgNamedExportPlugin',
           (modules: Module[]) => {
             for (const module of modules) {
-              let isExportModule = requestSet.has(module.userRequest);
-              if (!isExportModule) {
+              if (!requestSet.has(module.userRequest)) {
                 continue;
               }
               Object.defineProperty(module, 'used', {
@@ -118,7 +118,7 @@ export class NgNamedExportManifestPlugin {
   }
   apply(compiler: webpack.Compiler) {
     compiler.hooks.emit.tapAsync(
-      'NgNamedExportManifest',
+      'NgNamedExportManifestPlugin',
       (compilation: webpack.compilation.Compilation, callback) => {
         let chunk = (compilation.chunks as webpack.compilation.Chunk[]).find(
           (chunk) => chunk.name === this.options.entryName
@@ -136,14 +136,13 @@ export class NgNamedExportManifestPlugin {
         const manifest = {
           name,
           content: [...chunk.modulesIterable]
-            .map((module: Module) => {
-              if (
-                !module.buildMeta ||
-                module.buildMeta.moduleConcatenationBailout !==
+            .filter(
+              (module) =>
+                module.buildMeta &&
+                module.buildMeta.moduleConcatenationBailout ===
                   NgNamedExportPluginExplanation
-              ) {
-                return;
-              }
+            )
+            .map((module: Module) => {
               if (module.libIdent) {
                 const ident = module.libIdent({
                   context: this.options.context || compiler.options.context,
@@ -163,7 +162,6 @@ export class NgNamedExportManifestPlugin {
               }
             })
             .filter(Boolean)
-            .filter((item) => !item.ident.includes('$$_lazy_route_resource'))
             .reduce((obj, item) => {
               obj[item.ident] = item.data;
               return obj;
@@ -173,6 +171,7 @@ export class NgNamedExportManifestPlugin {
           ? JSON.stringify(manifest, null, 2)
           : JSON.stringify(manifest);
         const content = Buffer.from(manifestContent, 'utf8');
+        // 由于watch下无法生成实体文件供其他项目调用,所以直接写入硬盘...
         if (this.options.watchWrite) {
           this.writeUseFs(targetPath, content);
           callback();
