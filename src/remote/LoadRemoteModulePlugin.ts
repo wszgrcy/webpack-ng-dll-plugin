@@ -57,10 +57,8 @@ export class LoadRemoteModulePlugin {
 
     (mainTemplate.hooks as any).globalHashPaths.tap(
       'LoadRemoteModulePlugin',
-      (paths) => {
-        if (this.varExpression) {
-          paths.push(this.varExpression);
-        }
+      (paths: any[]) => {
+        paths.push(this.varExpression);
         return paths;
       }
     );

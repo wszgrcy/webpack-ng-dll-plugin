@@ -53,12 +53,6 @@ export class NgNamedExportPlugin {
               module = (module as any).rootModule;
             }
             if (module.userRequest && module.userRequest === this.exportFile) {
-              if ((moduleSourcePostContent as ConcatSource).add) {
-                (moduleSourcePostContent as ConcatSource).add(
-                  `\n;module.exports = __webpack_require__;\n`
-                );
-                return moduleSourcePostContent;
-              }
               return `\n;module.exports = __webpack_require__;\n`;
             }
             return moduleSourcePostContent;

@@ -19,9 +19,18 @@ describeBuilder(
   buildWebpackBrowserGenerate((options, context) => {
     return (config) => {
       config.plugins.push(
-        new NgNamedImportCheckPlugin([
-          path.resolve(context.workspaceRoot, 'src'),
-        ])
+        new NgNamedImportCheckPlugin(
+          [path.resolve(context.workspaceRoot, 'src')],
+          (module) => {
+            if (
+              module?.userRequest.includes('src/app/app.component.ts') &&
+              !module?.userRequest.includes('sub1')
+            ) {
+              return false;
+            }
+            return true;
+          }
+        )
       );
       config.plugins.push(
         new webpack.DllReferencePlugin({
