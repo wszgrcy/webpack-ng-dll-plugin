@@ -3,6 +3,8 @@ import * as path from 'path';
 import { Source } from 'webpack-sources';
 import { Module } from '../types';
 import * as fs from 'fs-extra';
+import { getEntryRuntime, mergeRuntimeOwned } from 'webpack/lib/util/runtime';
+import { mkdirp, dirname } from 'webpack/lib/util/fs';
 export class NgNamedExportPluginManifestOptions {
   /** 与LibManifestPlugin相同,资源文件生成的路径 */
   path: string;
@@ -40,7 +42,9 @@ export class NgNamedExportPlugin {
   apply(compiler: webpack.Compiler): void {
     compiler.hooks.thisCompilation.tap(
       'NgNamedExportPlugin',
-      (compilation: webpack.compilation.Compilation) => {
+      (compilation: webpack.Compilation) => {
+        const moduleGraph = compilation.moduleGraph;
+
         compilation.moduleTemplates.javascript.hooks.module.tap(
           'NgNamedExportPlugin',
           (
@@ -84,9 +88,17 @@ export class NgNamedExportPlugin {
             }
           }
         );
-        compilation.hooks.optimizeDependenciesAdvanced.tap(
+        compilation.hooks.afterOptimizeDependencies.tap(
           'NgNamedExportPlugin',
           (modules: Module[]) => {
+            let runtime = undefined;
+
+            for (const [name, { options }] of compilation.entries) {
+              runtime = mergeRuntimeOwned(
+                runtime,
+                getEntryRuntime(compilation, name, options)
+              );
+            }
             for (const module of modules) {
               if (!requestSet.has(module.userRequest)) {
                 continue;
@@ -97,9 +109,20 @@ export class NgNamedExportPlugin {
                 },
                 set() {},
               });
+              const exportsInfo = moduleGraph.getExportsInfo(module);
+              exportsInfo.setUsedInUnknownWay(runtime);
+              moduleGraph.addExtraReason(
+                module,
+                NgNamedExportPluginExplanation
+              );
+              if (module.factoryMeta === undefined) {
+                module.factoryMeta = {};
+              }
+              (module.factoryMeta as any).sideEffectFree = false;
+
               // module.used = true;
-              module.usedExports = true;
-              module.addReason(null, null, NgNamedExportPluginExplanation);
+              // module.usedExports = true;
+              // module.addReason(null, null, NgNamedExportPluginExplanation);
             }
           }
         );
@@ -119,8 +142,8 @@ export class NgNamedExportManifestPlugin {
   apply(compiler: webpack.Compiler) {
     compiler.hooks.emit.tapAsync(
       'NgNamedExportManifestPlugin',
-      (compilation: webpack.compilation.Compilation, callback) => {
-        let chunk = (compilation.chunks as webpack.compilation.Chunk[]).find(
+      (compilation: webpack.Compilation, callback) => {
+        let chunk = Array.from(compilation.chunks).find(
           (chunk) => chunk.name === this.options.entryName
         );
         const targetPath = compilation.getPath(this.options.path, {
@@ -176,12 +199,24 @@ export class NgNamedExportManifestPlugin {
           this.writeUseFs(targetPath, content);
           callback();
         } else {
-          compiler.outputFileSystem.mkdirp(path.dirname(targetPath), (err) => {
-            if (err) {
-              callback(err);
+          mkdirp(
+            compiler.intermediateFileSystem,
+            dirname(compiler.intermediateFileSystem, targetPath),
+            (err) => {
+              if (err) return callback(err);
+              compiler.intermediateFileSystem.writeFile(
+                targetPath,
+                content,
+                callback
+              );
             }
-            compiler.outputFileSystem.writeFile(targetPath, content, callback);
-          });
+          );
+          // compiler.outputFileSystem.mkdirp(path.dirname(targetPath), (err) => {
+          //   if (err) {
+          //     callback(err);
+          //   }
+          //   compiler.outputFileSystem.writeFile(targetPath, content, callback);
+          // });
         }
       }
     );

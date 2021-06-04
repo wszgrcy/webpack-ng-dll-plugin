@@ -47,7 +47,7 @@ export class NgDllPlugin {
   }
 }
 
-interface NormalModule extends webpack.compilation.Module {
+interface NormalModule extends webpack.Module {
   rawRequest: string | null;
   context: string | null;
   dependencies: any[];
@@ -73,41 +73,35 @@ class NgFilterPlugin {
   }
 
   apply(compiler: webpack.Compiler) {
-    compiler.hooks.compile.tap(
-      'NgFilterPlugin',
-      ({
-        normalModuleFactory,
-      }: {
-        normalModuleFactory: webpack.compilation.NormalModuleFactory;
-      }) => {
-        normalModuleFactory.hooks.parser
-          .for('javascript/auto')
-          .tap('NgFilterPlugin', (parser) => {
-            parser.hooks.importCall.tap('NgFilterPlugin', () => {
-              return false;
-            });
+    compiler.hooks.compile.tap('NgFilterPlugin', ({ normalModuleFactory }) => {
+      normalModuleFactory.hooks.parser
+        .for('javascript/auto')
+        .tap('NgFilterPlugin', (parser) => {
+          parser.hooks.importCall.tap('NgFilterPlugin', () => {
+            return false;
           });
-      }
-    );
+        });
+    });
     compiler.hooks.thisCompilation.tap('NgFilterPlugin', (compilation) => {
       const hooks: {
-        modules: SyncWaterfallHook<string, webpack.compilation.Chunk>;
+        modules: SyncWaterfallHook<string, webpack.Chunk>;
       } = compilation.mainTemplate.hooks as any;
-      hooks.modules.tap('NgFilterPlugin', (e, chunk) => {
-        for (const module of chunk.modulesIterable as webpack.SortableSet<NormalModule>) {
-          if (
-            (!module.context.includes('node_modules') && module.rawRequest) ||
-            (module.context || '').includes('$$_lazy_route_resource')
-          ) {
-            chunk.modulesIterable.delete(module);
-            continue;
-          }
-          if (!module.usedExports) {
-            chunk.modulesIterable.delete(module);
-          }
-        }
-        return e;
-      });
+      // todo 钩子被移除,需要重新实现
+      // hooks.modules.tap('NgFilterPlugin', (e:string, chunk) => {
+      //   for (const module of chunk.modulesIterable ) {
+      //     if (
+      //       (!module.context.includes('node_modules') && module.rawRequest) ||
+      //       (module.context || '').includes('$$_lazy_route_resource')
+      //     ) {
+      //       chunk.modulesIterable.delete(module);
+      //       continue;
+      //     }
+      //     if (!module.usedExports) {
+      //       chunk.modulesIterable.delete(module);
+      //     }
+      //   }
+      //   return e;
+      // });
 
       compilation.hooks.optimizeDependencies.tap(
         'NgFilterPlugin',
@@ -122,9 +116,10 @@ class NgFilterPlugin {
                   },
                   set() {},
                 });
+                //todo 重新实现
                 // module.used = true;
-                module.usedExports = true;
-                module.addReason(null, null, this.explanation);
+                // module.usedExports = true;
+                // module.addReason(null, null, this.explanation);
                 break;
               case 'filter':
                 if (this.options.filter(module)) {
@@ -135,10 +130,11 @@ class NgFilterPlugin {
                     set() {},
                   });
                   // module.used = true;
-                  module.usedExports = true;
-                  module.addReason(null, null, this.explanation);
+                  // todo 需要修改导出方式
+                  // module.usedExports = true;
+                  // module.addReason(null, null, this.explanation);
                 } else {
-                  module.usedExports = false;
+                  // module.usedExports = false;
                 }
                 break;
               default:

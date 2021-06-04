@@ -24,13 +24,13 @@ export class LoadRemoteModulePlugin {
       }
     );
   }
-  private run(compilation: webpack.compilation.Compilation): void {
+  private run(compilation: webpack.Compilation): void {
     const { mainTemplate, chunkTemplate } = compilation;
 
     for (const template of [mainTemplate, chunkTemplate]) {
-      ((template as any).hooks.renderWithEntry as SyncWaterfallHook).tap(
+      ((template as any).hooks.renderWithEntry as SyncWaterfallHook<any>).tap(
         'LoadRemoteModulePlugin',
-        (source, chunk: webpack.compilation.Chunk, hash) => {
+        (source, chunk: webpack.Chunk, hash) => {
           if (!this.entryNames.includes(chunk.name)) {
             return source;
           }

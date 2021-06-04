@@ -11,19 +11,18 @@ export class RemoteModuleStartupMainTemplatePlugin {
     compiler.hooks.thisCompilation.tap(
       'RemoteModuleStartupMainTemplatePlugin',
       (compilation) => {
-        ((compilation.mainTemplate.hooks as any)
-          .bootstrap as SyncWaterfallHook).tap(
-          'RemoteModuleStartupMainTemplatePlugin',
-          (source) => {
-            return Template.asString([
-              '// RemoteModuleStartupMainTemplatePlugin',
-              readFileSync(
-                path.resolve(__dirname, './module.template.js')
-              ).toString(),
-              source,
-            ]);
-          }
-        );
+        (
+          (compilation.mainTemplate.hooks as any)
+            .bootstrap as SyncWaterfallHook<any>
+        ).tap('RemoteModuleStartupMainTemplatePlugin', (source) => {
+          return Template.asString([
+            '// RemoteModuleStartupMainTemplatePlugin',
+            readFileSync(
+              path.resolve(__dirname, './module.template.js')
+            ).toString(),
+            source,
+          ]);
+        });
       }
     );
   }
