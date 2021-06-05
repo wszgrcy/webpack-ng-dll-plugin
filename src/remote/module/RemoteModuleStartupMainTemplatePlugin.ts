@@ -50,7 +50,7 @@ class RemoteModuleStartupMainTemplateModule extends webpack.RuntimeModule {
   }
   generate() {
     return Template.asString([
-      '// RemoteModuleStartupMainTemplatePlugin',
+      '// RemoteModuleStartupMainTemplateModule',
       readFileSync(path.resolve(__dirname, './module.template.js')).toString(),
     ]);
   }
