@@ -10,3 +10,6 @@ coverage
 .github
 docs
 .vscode
+.husky
+commitlint
+yarn-error.log
