@@ -2,6 +2,7 @@ import * as webpack from 'webpack';
 import { SyncWaterfallHook } from 'tapable';
 import { readFileSync } from 'fs';
 import * as path from 'path';
+import { RuntimeGlobals } from 'webpack';
 const { Template } = webpack;
 /** 
  *  
@@ -16,19 +17,33 @@ export class RemoteModuleManifestStartupMainTemplatePlugin {
     compiler.hooks.thisCompilation.tap(
       'RemoteModuleManifestStartupMainTemplatePlugin',
       (compilation) => {
-        (
-          (compilation.mainTemplate.hooks as any)
-            .bootstrap as SyncWaterfallHook<any>
-        ).tap('RemoteModuleManifestStartupMainTemplatePlugin', (source) => {
-          return Template.asString([
-            '// RemoteModuleManifestStartupMainTemplatePlugin',
-            readFileSync(
-              path.resolve(__dirname, './module-manifest.template.js')
-            ).toString(),
-            source,
-          ]);
-        });
+        compilation.hooks.additionalChunkRuntimeRequirements.tap(
+          'RemoteModuleManifestStartupMainTemplatePlugin',
+          (chunk, set) => {
+            if (chunk.name === 'main') {
+              set.add(RuntimeGlobals.startup);
+              compilation.addRuntimeModule(
+                chunk,
+                new RemoteModuleManifestStartupMainTemplateModule(),
+                compilation.chunkGraph
+              );
+            }
+          }
+        );
       }
     );
+  }
+}
+class RemoteModuleManifestStartupMainTemplateModule extends webpack.RuntimeModule {
+  constructor() {
+    super('RemoteModuleManifestStartupMainTemplateModule');
+  }
+  generate() {
+    return Template.asString([
+      '// RemoteModuleManifestStartupMainTemplateModule',
+      readFileSync(
+        path.resolve(__dirname, './module-manifest.template.js')
+      ).toString(),
+    ]);
   }
 }

@@ -27,18 +27,6 @@ export class RemoteModuleStartupMainTemplatePlugin {
             }
           }
         );
-        (
-          (compilation.mainTemplate.hooks as any)
-            .bootstrap as SyncWaterfallHook<any>
-        ).tap('RemoteModuleStartupMainTemplatePlugin', (source) => {
-          return Template.asString([
-            '// RemoteModuleStartupMainTemplatePlugin',
-            readFileSync(
-              path.resolve(__dirname, './module.template.js')
-            ).toString(),
-            source,
-          ]);
-        });
       }
     );
   }
