@@ -22,7 +22,7 @@ describeBuilder(
         let result = await harness.executeOnce();
         expect(harness.hasFile('dist/testSubProject/main.js')).toBe(true);
         let content = harness.readFile(`dist/testSubProject/main.js`);
-        expect(content).toContain('// RemoteModuleStartupMainTemplatePlugin');
+        expect(content).toContain('// RemoteModuleStartupMainTemplateModule');
         expect(content).toContain('loadRemoteModule');
       });
     });
@@ -44,7 +44,7 @@ describeBuilder(
         let result = await harness.executeOnce();
         expect(harness.hasFile('dist/testSubProject/main.js')).toBe(true);
         let content = harness.readFile(`dist/testSubProject/main.js`);
-        expect(content).toContain('// RemoteModuleStartupMainTemplatePlugin');
+        expect(content).toContain('// RemoteModuleStartupMainTemplateModule');
         expect(content).toContain('loadRemoteModule');
       });
     });
