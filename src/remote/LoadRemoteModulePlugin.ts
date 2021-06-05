@@ -23,23 +23,27 @@ export class LoadRemoteModulePlugin {
             compilation
           );
 
-        hooks.render.tap('LoadRemoteModulePlugin', (source, renderContext) => {
-          let chunk = renderContext.chunk;
-          if (!this.entryNames.includes(chunk.name)) {
-            return source;
+        hooks.renderStartup.tap(
+          'LoadRemoteModulePlugin',
+          (source, module, renderContext) => {
+            let chunk = renderContext.chunk;
+            if (!this.entryNames.includes(chunk.name)) {
+              return source;
+            }
+            const pathAndInfo = compilation.getPathWithInfo(
+              compilation.outputOptions.filename,
+              { chunk, contentHashType: 'javascript', hash: compilation.hash }
+            );
+            return new ConcatSource(
+              source,
+              `;loadRemoteModuleJsonpCallback('${
+                this.exportName || pathAndInfo.path
+              }',`,
+              `__webpack_exports__`,
+              `);`
+            );
           }
-          const pathAndInfo = compilation.getPathWithInfo(
-            compilation.outputOptions.filename,
-            { chunk, contentHashType: 'javascript', hash: compilation.hash }
-          );
-          return new ConcatSource(
-            `loadRemoteModuleJsonpCallback('${
-              this.exportName || pathAndInfo.path
-            }',`,
-            source,
-            `)`
-          );
-        });
+        );
       }
     );
   }
