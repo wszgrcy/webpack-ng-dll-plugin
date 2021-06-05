@@ -1,12 +1,10 @@
 import webpack from 'webpack';
 const { ConcatSource } = require('webpack-sources');
-import { SyncWaterfallHook } from 'tapable';
 /**
  * 普通模块转换为远程模块
  * 转换为由函数包裹的`JsonPCallback`方式,类似`webpack`的懒加载分包加载方式
  */
 export class LoadRemoteModulePlugin {
-  private readonly varExpression = 'loadRemoteModuleJsonpCallback';
   /**
    *
    * @param [exportName] 导出命名,默认与文件名相同
@@ -20,21 +18,18 @@ export class LoadRemoteModulePlugin {
     compiler.hooks.thisCompilation.tap(
       'LoadRemoteModulePlugin',
       (compilation) => {
-        this.run(compilation);
-      }
-    );
-  }
-  private run(compilation: webpack.Compilation): void {
-    const { mainTemplate, chunkTemplate } = compilation;
+        const hooks =
+          webpack.javascript.JavascriptModulesPlugin.getCompilationHooks(
+            compilation
+          );
 
-    for (const template of [mainTemplate, chunkTemplate]) {
-      ((template as any).hooks.renderWithEntry as SyncWaterfallHook<any>).tap(
-        'LoadRemoteModulePlugin',
-        (source, chunk: webpack.Chunk, hash) => {
+        hooks.render.tap('LoadRemoteModulePlugin', (source, renderContext) => {
+          let chunk = renderContext.chunk;
+          let hash = renderContext.chunk.hash;
           if (!this.entryNames.includes(chunk.name)) {
             return source;
           }
-          const pathAndInfo = (compilation as any).getPathWithInfo(
+          const pathAndInfo = compilation.getPathWithInfo(
             compilation.outputOptions.filename,
             { chunk, contentHashType: 'javascript', hash }
           );
@@ -45,19 +40,8 @@ export class LoadRemoteModulePlugin {
             source,
             `)`
           );
-        }
-      );
-    }
-
-    (mainTemplate.hooks as any).globalHashPaths.tap(
-      'LoadRemoteModulePlugin',
-      (paths: any[]) => {
-        paths.push(this.varExpression);
-        return paths;
+        });
       }
     );
-    mainTemplate.hooks.hash.tap('LoadRemoteModulePlugin', (hash) => {
-      hash.update(`set remote module ${this.varExpression}`);
-    });
   }
 }
