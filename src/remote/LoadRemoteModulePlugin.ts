@@ -25,13 +25,12 @@ export class LoadRemoteModulePlugin {
 
         hooks.render.tap('LoadRemoteModulePlugin', (source, renderContext) => {
           let chunk = renderContext.chunk;
-          let hash = renderContext.chunk.hash;
           if (!this.entryNames.includes(chunk.name)) {
             return source;
           }
           const pathAndInfo = compilation.getPathWithInfo(
             compilation.outputOptions.filename,
-            { chunk, contentHashType: 'javascript', hash }
+            { chunk, contentHashType: 'javascript', hash: compilation.hash }
           );
           return new ConcatSource(
             `loadRemoteModuleJsonpCallback('${
