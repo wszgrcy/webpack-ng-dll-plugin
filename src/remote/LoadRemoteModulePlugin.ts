@@ -1,10 +1,12 @@
 import webpack from 'webpack';
 const { ConcatSource } = require('webpack-sources');
+import { mergeRuntimeOwned, getEntryRuntime } from 'webpack/lib/util/runtime';
 /**
  * 普通模块转换为远程模块
  * 转换为由函数包裹的`JsonPCallback`方式,类似`webpack`的懒加载分包加载方式
  */
 export class LoadRemoteModulePlugin {
+  private moduleName = '';
   /**
    *
    * @param [exportName] 导出命名,默认与文件名相同
@@ -34,14 +36,39 @@ export class LoadRemoteModulePlugin {
               compilation.outputOptions.filename,
               { chunk, contentHashType: 'javascript', hash: compilation.hash }
             );
+            this.moduleName = this.exportName || pathAndInfo.path;
             return new ConcatSource(
               source,
-              `;loadRemoteModuleJsonpCallback('${
-                this.exportName || pathAndInfo.path
-              }',`,
+              `;loadRemoteModuleJsonpCallback('${this.moduleName}',`,
               `__webpack_exports__`,
               `);`
             );
+          }
+        );
+        compilation.hooks.finishModules.tap(
+          'LoadRemoteModulePlugin',
+          (modules) => {
+            let runtime;
+            for (const [name, { options }] of compilation.entries) {
+              runtime = mergeRuntimeOwned(
+                runtime,
+                getEntryRuntime(compilation, name, options)
+              );
+            }
+            let entry = [...compilation.entries].find(([name]) =>
+              this.entryNames.includes(name)
+            )[1];
+            let dep = entry.dependencies[entry.dependencies.length - 1];
+            let module = compilation.moduleGraph.getModule(dep);
+            const exportsInfo = compilation.moduleGraph.getExportsInfo(module);
+            exportsInfo.setUsedInUnknownWay(runtime);
+          }
+        );
+        hooks.chunkHash.tap(
+          'LoadRemoteModulePlugin',
+          (chunk, hash, context) => {
+            hash.update('LoadRemoteModulePlugin');
+            hash.update(this.moduleName);
           }
         );
       }
