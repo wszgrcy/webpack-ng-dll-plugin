@@ -12,6 +12,7 @@ export interface NgDllPluginOptions {
   name: string;
   /** 传入 LibManifestPlugin 生成 manifest 时是否格式化 */
   format?: boolean;
+  runtime?: string;
 }
 
 /**
@@ -24,18 +25,20 @@ export class NgDllPlugin {
 
   apply(compiler: webpack.Compiler) {
     compiler.hooks.entryOption.tap('NgDllPlugin', (context, entry) => {
-      const itemToPlugin = (item, name) => {
-        if (Array.isArray(item)) {
-          return new DllEntryPlugin(context, item, name);
+      if (typeof entry !== 'function') {
+        for (const name of Object.keys(entry)) {
+          const options = {
+            name,
+            filename: entry.filename,
+          };
+          new DllEntryPlugin(context, entry[name].import, options).apply(
+            compiler
+          );
         }
-        throw new Error('NgDllPlugin: supply an Array as entry');
-      };
-      if (typeof entry === 'object' && !Array.isArray(entry)) {
-        Object.keys(entry).forEach((name) => {
-          itemToPlugin(entry[name], name).apply(compiler);
-        });
       } else {
-        itemToPlugin(entry, 'main').apply(compiler);
+        throw new Error(
+          "DllPlugin doesn't support dynamic entry (function) yet"
+        );
       }
       return true;
     });
@@ -43,11 +46,13 @@ export class NgDllPlugin {
       compiler
     );
 
-    new NgFilterPlugin(this.options.filter).apply(compiler);
+    new NgFilterPlugin(this.options.filter, this.options.runtime).apply(
+      compiler
+    );
   }
 }
 
-interface NormalModule extends webpack.compilation.Module {
+interface NormalModule extends webpack.Module {
   rawRequest: string | null;
   context: string | null;
   dependencies: any[];
@@ -63,7 +68,10 @@ export interface NgFilterPluginOptions {
 class NgFilterPlugin {
   explanation = 'NgFilterPlugin';
   unCompressMap: Map<string, string[]> = new Map();
-  constructor(private options: NgFilterPluginOptions = { mode: 'full' }) {
+  constructor(
+    private options: NgFilterPluginOptions = { mode: 'full' },
+    private runtime: string = 'main'
+  ) {
     // this.options.mode = this.options.mode || 'full';
     if (this.options.mode === 'filter') {
       if (!this.options.filter) {
@@ -73,72 +81,70 @@ class NgFilterPlugin {
   }
 
   apply(compiler: webpack.Compiler) {
-    compiler.hooks.compile.tap(
-      'NgFilterPlugin',
-      ({
-        normalModuleFactory,
-      }: {
-        normalModuleFactory: webpack.compilation.NormalModuleFactory;
-      }) => {
-        normalModuleFactory.hooks.parser
-          .for('javascript/auto')
-          .tap('NgFilterPlugin', (parser) => {
-            parser.hooks.importCall.tap('NgFilterPlugin', () => {
-              return false;
-            });
+    compiler.hooks.compile.tap('NgFilterPlugin', ({ normalModuleFactory }) => {
+      normalModuleFactory.hooks.parser
+        .for('javascript/auto')
+        .tap('NgFilterPlugin', (parser) => {
+          parser.hooks.importCall.tap('NgFilterPlugin', () => {
+            return false;
           });
-      }
-    );
+        });
+    });
     compiler.hooks.thisCompilation.tap('NgFilterPlugin', (compilation) => {
-      const hooks: {
-        modules: SyncWaterfallHook<string, webpack.compilation.Chunk>;
-      } = compilation.mainTemplate.hooks as any;
-      hooks.modules.tap('NgFilterPlugin', (e, chunk) => {
-        for (const module of chunk.modulesIterable as webpack.SortableSet<NormalModule>) {
-          if (
-            (!module.context.includes('node_modules') && module.rawRequest) ||
-            (module.context || '').includes('$$_lazy_route_resource')
-          ) {
-            chunk.modulesIterable.delete(module);
-            continue;
+      const moduleGraph = compilation.moduleGraph;
+
+      compilation.hooks.renderManifest.tap(
+        'NgFilterPlugin',
+        (list, options) => {
+          let modules = options.chunkGraph.getChunkModulesIterable(
+            options.chunk
+          );
+          for (const module of modules) {
+            if (
+              (!(module.context || '').includes('node_modules') &&
+                (module as any).rawRequest) ||
+              (module.context || '').includes('$$_lazy_route_resource')
+            ) {
+              (modules as any).delete(module);
+              continue;
+            }
+            if (!moduleGraph.getUsedExports(module, this.runtime)) {
+              (modules as any).delete(module);
+            }
           }
-          if (!module.usedExports) {
-            chunk.modulesIterable.delete(module);
-          }
+          return list;
         }
-        return e;
-      });
+      );
 
       compilation.hooks.optimizeDependencies.tap(
         'NgFilterPlugin',
         (modules) => {
-          // this.unCompressMap = new Map();
           for (const module of modules as NormalModule[]) {
             switch (this.options.mode) {
               case 'full':
-                Object.defineProperty(module, 'used', {
-                  get() {
-                    return true;
-                  },
-                  set() {},
-                });
-                // module.used = true;
-                module.usedExports = true;
-                module.addReason(null, null, this.explanation);
+                const exportsInfo = moduleGraph.getExportsInfo(module);
+                exportsInfo.setHasUseInfo();
+                exportsInfo.setUsedInUnknownWay(this.runtime);
+                moduleGraph.addExtraReason(module, this.explanation);
+                if (module.factoryMeta === undefined) {
+                  module.factoryMeta = {};
+                }
+                (module.factoryMeta as any).sideEffectFree = false;
                 break;
               case 'filter':
                 if (this.options.filter(module)) {
-                  Object.defineProperty(module, 'used', {
-                    get() {
-                      return true;
-                    },
-                    set() {},
-                  });
-                  // module.used = true;
-                  module.usedExports = true;
-                  module.addReason(null, null, this.explanation);
+                  module.getConcatenationBailoutReason = () => {
+                    return this.explanation;
+                  };
+                  const exportsInfo = moduleGraph.getExportsInfo(module);
+                  exportsInfo.setHasUseInfo();
+                  exportsInfo.setUsedInUnknownWay(this.runtime);
+                  moduleGraph.addExtraReason(module, this.explanation);
+                  if (module.factoryMeta === undefined) {
+                    module.factoryMeta = {};
+                  }
+                  (module.factoryMeta as any).sideEffectFree = false;
                 } else {
-                  module.usedExports = false;
                 }
                 break;
               default:

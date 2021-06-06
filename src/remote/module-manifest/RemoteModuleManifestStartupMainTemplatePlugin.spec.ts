@@ -20,9 +20,11 @@ describeBuilder(
       it('可执行', async () => {
         harness.useTarget('build', angularConfig);
         let result = await harness.executeOnce();
-        expect(harness.hasFile('dist/testSubProject/runtime.js')).toBe(true);
-        let content = harness.readFile(`dist/testSubProject/runtime.js`);
-        expect(content).toContain('// RemoteModuleManifestStartupMainTemplatePlugin');
+        expect(harness.hasFile('dist/testSubProject/main.js')).toBe(true);
+        let content = harness.readFile(`dist/testSubProject/main.js`);
+        expect(content).toContain(
+          '// RemoteModuleManifestStartupMainTemplateModule'
+        );
         expect(content).toContain('loadRemoteModuleManifest');
       });
     });

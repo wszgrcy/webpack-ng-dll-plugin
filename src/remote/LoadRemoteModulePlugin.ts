@@ -1,12 +1,12 @@
 import webpack from 'webpack';
 const { ConcatSource } = require('webpack-sources');
-import { SyncWaterfallHook } from 'tapable';
+import { mergeRuntimeOwned, getEntryRuntime } from 'webpack/lib/util/runtime';
 /**
  * 普通模块转换为远程模块
  * 转换为由函数包裹的`JsonPCallback`方式,类似`webpack`的懒加载分包加载方式
  */
 export class LoadRemoteModulePlugin {
-  private readonly varExpression = 'loadRemoteModuleJsonpCallback';
+  private moduleName = '';
   /**
    *
    * @param [exportName] 导出命名,默认与文件名相同
@@ -20,44 +20,58 @@ export class LoadRemoteModulePlugin {
     compiler.hooks.thisCompilation.tap(
       'LoadRemoteModulePlugin',
       (compilation) => {
-        this.run(compilation);
-      }
-    );
-  }
-  private run(compilation: webpack.compilation.Compilation): void {
-    const { mainTemplate, chunkTemplate } = compilation;
+        const hooks =
+          webpack.javascript.JavascriptModulesPlugin.getCompilationHooks(
+            compilation
+          );
 
-    for (const template of [mainTemplate, chunkTemplate]) {
-      ((template as any).hooks.renderWithEntry as SyncWaterfallHook).tap(
-        'LoadRemoteModulePlugin',
-        (source, chunk: webpack.compilation.Chunk, hash) => {
-          if (!this.entryNames.includes(chunk.name)) {
-            return source;
+        hooks.renderStartup.tap(
+          'LoadRemoteModulePlugin',
+          (source, module, renderContext) => {
+            let chunk = renderContext.chunk;
+            if (!this.entryNames.includes(chunk.name)) {
+              return source;
+            }
+            const pathAndInfo = compilation.getPathWithInfo(
+              compilation.outputOptions.filename,
+              { chunk, contentHashType: 'javascript', hash: compilation.hash }
+            );
+            this.moduleName = this.exportName || pathAndInfo.path;
+            return new ConcatSource(
+              source,
+              `;loadRemoteModuleJsonpCallback('${this.moduleName}',`,
+              `__webpack_exports__`,
+              `);`
+            );
           }
-          const pathAndInfo = (compilation as any).getPathWithInfo(
-            compilation.outputOptions.filename,
-            { chunk, contentHashType: 'javascript', hash }
-          );
-          return new ConcatSource(
-            `loadRemoteModuleJsonpCallback('${
-              this.exportName || pathAndInfo.path
-            }',`,
-            source,
-            `)`
-          );
-        }
-      );
-    }
-
-    (mainTemplate.hooks as any).globalHashPaths.tap(
-      'LoadRemoteModulePlugin',
-      (paths: any[]) => {
-        paths.push(this.varExpression);
-        return paths;
+        );
+        compilation.hooks.finishModules.tap(
+          'LoadRemoteModulePlugin',
+          (modules) => {
+            let runtime;
+            for (const [name, { options }] of compilation.entries) {
+              runtime = mergeRuntimeOwned(
+                runtime,
+                getEntryRuntime(compilation, name, options)
+              );
+            }
+            let entry = [...compilation.entries].find(([name]) =>
+              this.entryNames.includes(name)
+            )[1];
+            let dep = entry.dependencies[entry.dependencies.length - 1];
+            let module = compilation.moduleGraph.getModule(dep);
+            const exportsInfo = compilation.moduleGraph.getExportsInfo(module);
+            exportsInfo.setUsedInUnknownWay(runtime);
+          }
+        );
+        hooks.chunkHash.tap(
+          'LoadRemoteModulePlugin',
+          (chunk, hash, context) => {
+            hash.update('LoadRemoteModulePlugin');
+            hash.update(this.moduleName);
+          }
+        );
       }
     );
-    mainTemplate.hooks.hash.tap('LoadRemoteModulePlugin', (hash) => {
-      hash.update(`set remote module ${this.varExpression}`);
-    });
   }
 }

@@ -6,7 +6,11 @@ import {
 } from '../test/test-builder/browser';
 import * as path from 'path';
 import { setNgDllPlugin } from './helper';
-let angularConfig = { ...DEFAULT_ANGULAR_CONFIG, vendorChunk: false };
+let angularConfig = {
+  ...DEFAULT_ANGULAR_CONFIG,
+  vendorChunk: false,
+  tsConfig: 'src/tsconfig.dll.json',
+};
 describeBuilder(
   buildWebpackBrowserGenerate((options, context) => {
     return (config) => {
@@ -43,7 +47,7 @@ describeBuilder(
 
         expect(harness.hasFile('dist/testProject/dll.js')).toBe(true);
         let content = harness.readFile('dist/testProject/dll.js');
-        expect(content).toContain('var Dll =');
+        expect(content).toContain('var Dll');
         expect(harness.hasFile('dist/manifest.json'));
 
         let manifest = harness.readFile('dist/manifest.json');
@@ -98,7 +102,7 @@ describeBuilder(
 
         expect(harness.hasFile('dist/testProject/dll.js')).toBe(true);
         let content = harness.readFile('dist/testProject/dll.js');
-        expect(content).toContain('var Dll =');
+        expect(content).toContain('var Dll');
         expect(harness.hasFile('dist/manifest.json'));
 
         let manifest = harness.readFile('dist/manifest.json');

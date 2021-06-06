@@ -1,7 +1,7 @@
 import * as webpack from 'webpack';
-import { SyncWaterfallHook } from 'tapable';
 import { readFileSync } from 'fs';
 import * as path from 'path';
+import { RuntimeGlobals } from 'webpack';
 const { Template } = webpack;
 /** 
  *  
@@ -12,24 +12,39 @@ const { Template } = webpack;
 使用此插件时需要先引入`RemoteModuleStartupMainTemplatePlugin`插件
  */
 export class RemoteModuleManifestStartupMainTemplatePlugin {
+  constructor(private chunkName: string = 'main') {}
+
   apply(compiler: webpack.Compiler) {
     compiler.hooks.thisCompilation.tap(
       'RemoteModuleManifestStartupMainTemplatePlugin',
       (compilation) => {
-        ((compilation.mainTemplate.hooks as any)
-          .bootstrap as SyncWaterfallHook).tap(
+        compilation.hooks.additionalChunkRuntimeRequirements.tap(
           'RemoteModuleManifestStartupMainTemplatePlugin',
-          (source) => {
-            return Template.asString([
-              '// RemoteModuleManifestStartupMainTemplatePlugin',
-              readFileSync(
-                path.resolve(__dirname, './module-manifest.template.js')
-              ).toString(),
-              source,
-            ]);
+          (chunk, set) => {
+            if (chunk.name === this.chunkName) {
+              set.add(RuntimeGlobals.startup);
+              compilation.addRuntimeModule(
+                chunk,
+                new RemoteModuleManifestStartupMainTemplateModule(),
+                compilation.chunkGraph
+              );
+            }
           }
         );
       }
     );
+  }
+}
+class RemoteModuleManifestStartupMainTemplateModule extends webpack.RuntimeModule {
+  constructor() {
+    super('RemoteModuleManifestStartupMainTemplateModule');
+  }
+  generate() {
+    return Template.asString([
+      '// RemoteModuleManifestStartupMainTemplateModule',
+      readFileSync(
+        path.resolve(__dirname, './module-manifest.template.js')
+      ).toString(),
+    ]);
   }
 }

@@ -1,8 +1,10 @@
 import * as webpack from 'webpack';
 import * as path from 'path';
-import { Source } from 'webpack-sources';
+import { RawSource } from 'webpack-sources';
 import { Module } from '../types';
 import * as fs from 'fs-extra';
+import { mkdirp, dirname } from 'webpack/lib/util/fs';
+import { NormalModule } from 'webpack';
 export class NgNamedExportPluginManifestOptions {
   /** 与LibManifestPlugin相同,资源文件生成的路径 */
   path: string;
@@ -16,6 +18,7 @@ export class NgNamedExportPluginManifestOptions {
   entryName?: string = 'main';
   /** 是否在watch模式下写入到磁盘上(fs) */
   watchWrite?: boolean = false;
+  type?: string;
 }
 
 const NgNamedExportPluginExplanation = 'NgNamedExportPlugin';
@@ -29,7 +32,8 @@ export class NgNamedExportPlugin {
    */
   constructor(
     private exportFile: string,
-    private manifestOptions: NgNamedExportPluginManifestOptions
+    private manifestOptions: NgNamedExportPluginManifestOptions,
+    private runtime = 'main'
   ) {
     this.manifestOptions = {
       ...new NgNamedExportPluginManifestOptions(),
@@ -40,19 +44,33 @@ export class NgNamedExportPlugin {
   apply(compiler: webpack.Compiler): void {
     compiler.hooks.thisCompilation.tap(
       'NgNamedExportPlugin',
-      (compilation: webpack.compilation.Compilation) => {
-        compilation.moduleTemplates.javascript.hooks.module.tap(
+      (compilation: webpack.Compilation) => {
+        const moduleGraph = compilation.moduleGraph;
+        let hooks =
+          webpack.javascript.JavascriptModulesPlugin.getCompilationHooks(
+            compilation
+          );
+        hooks.renderModuleContent.tap(
           'NgNamedExportPlugin',
-          (
-            moduleSourcePostContent: Source,
-            module,
-            options,
-            dependencyTemplates
-          ) => {
+          (source, module: webpack.NormalModule, context) => {
             if (module.userRequest && module.userRequest === this.exportFile) {
-              return `\n;module.exports = __webpack_require__;\n`;
+              let runtimeRequirements =
+                context.chunkGraph.getModuleRuntimeRequirements(
+                  module,
+                  context.chunk.runtime
+                );
+
+              const needModule = runtimeRequirements.has(
+                webpack.RuntimeGlobals.module
+              );
+              let firstArgumentName = needModule
+                ? module.moduleArgument
+                : '__unused_webpack_' + module.moduleArgument;
+              return new RawSource(
+                `\n;${firstArgumentName}.exports = __webpack_require__;\n`
+              ) as any;
             }
-            return moduleSourcePostContent;
+            return source;
           }
         );
         /**
@@ -61,45 +79,47 @@ export class NgNamedExportPlugin {
         let requestSet = new Set<string>();
         compilation.hooks.optimizeDependencies.tap(
           'NgNamedExportPlugin',
-          (modules: Module[]) => {
-            let exportModule = modules.find(
-              (item) => item.userRequest === this.exportFile
+          (modules) => {
+            let exportModule = [...modules].find(
+              (item: NormalModule) => item.userRequest === this.exportFile
             );
             exportModule.dependencies
               .filter((dep) => dep.getResourceIdentifier())
               .filter((item) => item)
-              .map((dep) => dep.module)
+              .map((dep) => compilation.moduleGraph.getModule(dep))
               .filter((item) => item)
-              .filter((item) => item.userRequest)
+              .filter((item) => (item as any).userRequest)
               .forEach((item) => {
-                requestSet.add(item.userRequest);
+                requestSet.add((item as any).userRequest);
               });
             for (const module of modules) {
-              if (!requestSet.has(module.userRequest)) {
+              if (!requestSet.has((module as NormalModule).userRequest)) {
                 continue;
               }
-              module.buildMeta = module.buildMeta || {};
-              module.buildMeta.moduleConcatenationBailout =
-                NgNamedExportPluginExplanation;
+              module.getConcatenationBailoutReason = () => {
+                return NgNamedExportPluginExplanation;
+              };
             }
           }
         );
-        compilation.hooks.optimizeDependenciesAdvanced.tap(
+        compilation.hooks.afterOptimizeDependencies.tap(
           'NgNamedExportPlugin',
-          (modules: Module[]) => {
+          (modules) => {
             for (const module of modules) {
-              if (!requestSet.has(module.userRequest)) {
+              if (!requestSet.has((module as NormalModule).userRequest)) {
                 continue;
               }
-              Object.defineProperty(module, 'used', {
-                get() {
-                  return true;
-                },
-                set() {},
-              });
-              // module.used = true;
-              module.usedExports = true;
-              module.addReason(null, null, NgNamedExportPluginExplanation);
+
+              const exportsInfo = moduleGraph.getExportsInfo(module);
+              exportsInfo.setUsedInUnknownWay(this.runtime);
+              moduleGraph.addExtraReason(
+                module,
+                NgNamedExportPluginExplanation
+              );
+              if (module.factoryMeta === undefined) {
+                module.factoryMeta = {};
+              }
+              (module.factoryMeta as any).sideEffectFree = false;
             }
           }
         );
@@ -119,46 +139,55 @@ export class NgNamedExportManifestPlugin {
   apply(compiler: webpack.Compiler) {
     compiler.hooks.emit.tapAsync(
       'NgNamedExportManifestPlugin',
-      (compilation: webpack.compilation.Compilation, callback) => {
-        let chunk = (compilation.chunks as webpack.compilation.Chunk[]).find(
+      (compilation, callback) => {
+        let chunk = Array.from(compilation.chunks).find(
           (chunk) => chunk.name === this.options.entryName
         );
+        const chunkGraph = compilation.chunkGraph;
+        const moduleGraph = compilation.moduleGraph;
         const targetPath = compilation.getPath(this.options.path, {
-          hash: compilation.hash,
           chunk,
         });
         const name =
           this.options.name &&
           compilation.getPath(this.options.name, {
-            hash: compilation.hash,
             chunk,
           });
         const manifest = {
           name,
-          content: [...chunk.modulesIterable]
+          type: this.options.type,
+          content: [
+            ...chunkGraph.getOrderedChunkModulesIterable(
+              chunk,
+              webpack.util.comparators.compareModulesById(chunkGraph)
+            ),
+          ]
             .filter(
               (module) =>
-                module.buildMeta &&
-                module.buildMeta.moduleConcatenationBailout ===
-                  NgNamedExportPluginExplanation
+                module.getConcatenationBailoutReason({
+                  chunkGraph,
+                  moduleGraph,
+                }) === NgNamedExportPluginExplanation
             )
             .map((module: Module) => {
-              if (module.libIdent) {
-                const ident = module.libIdent({
-                  context: this.options.context || compiler.options.context,
-                });
-                if (ident) {
-                  return {
-                    ident,
-                    data: {
-                      id: module.id,
-                      buildMeta: {
-                        ...module.buildMeta,
-                        moduleConcatenationBailout: undefined,
-                      },
-                    },
-                  };
-                }
+              const ident = module.libIdent({
+                context: this.options.context || compiler.options.context,
+                associatedObjectForCache: compiler.root,
+              });
+              if (ident) {
+                const exportsInfo = moduleGraph.getExportsInfo(module);
+                const providedExports = exportsInfo.getProvidedExports();
+
+                return {
+                  ident,
+                  data: {
+                    id: chunkGraph.getModuleId(module),
+                    buildMeta: module.buildMeta,
+                    exports: Array.isArray(providedExports)
+                      ? providedExports
+                      : undefined,
+                  },
+                };
               }
             })
             .filter(Boolean)
@@ -176,12 +205,18 @@ export class NgNamedExportManifestPlugin {
           this.writeUseFs(targetPath, content);
           callback();
         } else {
-          compiler.outputFileSystem.mkdirp(path.dirname(targetPath), (err) => {
-            if (err) {
-              callback(err);
+          mkdirp(
+            compiler.intermediateFileSystem,
+            dirname(compiler.intermediateFileSystem, targetPath),
+            (err) => {
+              if (err) return callback(err);
+              compiler.intermediateFileSystem.writeFile(
+                targetPath,
+                content,
+                callback
+              );
             }
-            compiler.outputFileSystem.writeFile(targetPath, content, callback);
-          });
+          );
         }
       }
     );

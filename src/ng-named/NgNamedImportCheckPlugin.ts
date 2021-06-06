@@ -23,7 +23,7 @@ export class NgNamedImportCheckPlugin {
   apply(compiler: webpack.Compiler): void {
     compiler.hooks.thisCompilation.tap(
       'NgNamedImportCheckPlugin',
-      (compilation: webpack.compilation.Compilation) => {
+      (compilation: webpack.Compilation) => {
         compilation.hooks.optimizeDependencies.tap(
           'NgNamedImportCheckPlugin',
           (modules: Module[]) => {
