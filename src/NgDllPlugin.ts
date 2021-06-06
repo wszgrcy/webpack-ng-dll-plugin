@@ -126,7 +126,6 @@ class NgFilterPlugin {
                 exportsInfo.setHasUseInfo();
                 exportsInfo.setUsedInUnknownWay(this.runtime);
                 moduleGraph.addExtraReason(module, this.explanation);
-                moduleGraph.getUsedExports(module, this.runtime);
                 if (module.factoryMeta === undefined) {
                   module.factoryMeta = {};
                 }

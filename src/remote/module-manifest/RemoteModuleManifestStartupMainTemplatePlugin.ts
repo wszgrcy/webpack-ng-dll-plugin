@@ -1,5 +1,4 @@
 import * as webpack from 'webpack';
-import { SyncWaterfallHook } from 'tapable';
 import { readFileSync } from 'fs';
 import * as path from 'path';
 import { RuntimeGlobals } from 'webpack';
@@ -13,6 +12,8 @@ const { Template } = webpack;
 使用此插件时需要先引入`RemoteModuleStartupMainTemplatePlugin`插件
  */
 export class RemoteModuleManifestStartupMainTemplatePlugin {
+  constructor(private chunkName: string = 'main') {}
+
   apply(compiler: webpack.Compiler) {
     compiler.hooks.thisCompilation.tap(
       'RemoteModuleManifestStartupMainTemplatePlugin',
@@ -20,7 +21,7 @@ export class RemoteModuleManifestStartupMainTemplatePlugin {
         compilation.hooks.additionalChunkRuntimeRequirements.tap(
           'RemoteModuleManifestStartupMainTemplatePlugin',
           (chunk, set) => {
-            if (chunk.name === 'main') {
+            if (chunk.name === this.chunkName) {
               set.add(RuntimeGlobals.startup);
               compilation.addRuntimeModule(
                 chunk,
