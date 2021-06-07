@@ -61,6 +61,14 @@ describeBuilder(
               !name.includes('$$_lazy_route_resource')
           )
         ).toBe(true);
+        expect(
+          Object.keys(manifestJson.content).every(
+            (name) =>
+              !['main.ts', 'app.component', 'app.module'].some((item) =>
+                name.includes(item)
+              )
+          )
+        ).toBe(true);
       });
     });
   }
