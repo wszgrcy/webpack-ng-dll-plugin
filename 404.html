@@ -1,0 +1,214 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>webpack-ng-dll-plugin</title>
+	<meta name="description" content="Documentation for webpack-ng-dll-plugin">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+	<script async src="assets/js/search.js" id="search-script"></script>
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">webpack-ng-dll-plugin</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<h1>webpack-ng-dll-plugin</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#webpack-ng-dll-plugin" id="webpack-ng-dll-plugin" style="color: inherit; text-decoration: none;">
+					<h1>webpack-ng-dll-plugin</h1>
+				</a>
+				<ul>
+					<li>一个 ng 远程加载插件库</li>
+				</ul>
+				<a href="#ng-named" id="ng-named" style="color: inherit; text-decoration: none;">
+					<h2>ng-named</h2>
+				</a>
+				<ul>
+					<li>主要用来在主项目中导出相关命名(组件,模块,服务,指令,管道及正常的 export 等)</li>
+					<li>子项目正常引入主项目的资源,在构建时会自动的替换为引入函数</li>
+					<li>远程子项目使用需要建立虚拟子项目当做桩,相关路径符合定义的<code>context+导出的资源文件</code>即可</li>
+				</ul>
+				<a href="#主项目使用" id="主项目使用" style="color: inherit; text-decoration: none;">
+					<h3>主项目使用</h3>
+				</a>
+				<ul>
+					<li><code>NgNamedExportPlugin</code> 类似 dll,但是实际上是跑在主项目上的 dll,也就是两种的合体,可以在主项目内部被正常使用的同时,暴露给子项目使用</li>
+					<li>如果模块上有组件/指令/管道等可能被摇树掉的东西,那么就需要同样在出口声明导出</li>
+				</ul>
+				<a href="#子项目使用" id="子项目使用" style="color: inherit; text-decoration: none;">
+					<h3>子项目使用</h3>
+				</a>
+				<ul>
+					<li><code>NgNamedImportCheckPlugin</code> 用于子项目应用的依赖检查,比如正常引入一个模块,实际上要使用这个模块内的一个组件,那么可能这个组件就忘记被导出,需要在出口文件导出<blockquote>
+							<p>如果检查到依赖未导出,默认情况下,会警告提示,不会中断项目</p>
+						</blockquote>
+					</li>
+				</ul>
+				<a href="#remote" id="remote" style="color: inherit; text-decoration: none;">
+					<h2>remote</h2>
+				</a>
+				<ul>
+					<li>将子项目链接到主项目,使得主项目能正确的找到相关子项目</li>
+				</ul>
+				<a href="#主项目使用-1" id="主项目使用-1" style="color: inherit; text-decoration: none;">
+					<h3>主项目使用</h3>
+				</a>
+				<ul>
+					<li><code>RemoteModuleStartupMainTemplatePlugin</code> 用于加载远程项目,不过是单文件的加载</li>
+					<li><code>RemoteModuleManifestStartupMainTemplatePlugin</code> 用于加载远程项目,支持一个清单,进行多个 js 文件,多个 css 文件的加载</li>
+				</ul>
+				<a href="#子项目使用-1" id="子项目使用-1" style="color: inherit; text-decoration: none;">
+					<h3>子项目使用</h3>
+				</a>
+				<ul>
+					<li><code>RemoteModuleManifestStartupMainTemplatePlugin</code> 使用类似<code>runtime</code>的<code>Jsonp</code>方式加载到主项目中</li>
+				</ul>
+				<a href="#dll" id="dll" style="color: inherit; text-decoration: none;">
+					<h2>dll</h2>
+				</a>
+				<ul>
+					<li>提取主项的依赖,并且通过<code>DllReferencePlugin</code>使主项目,子项目使用相同依赖</li>
+				</ul>
+				<a href="#主项目" id="主项目" style="color: inherit; text-decoration: none;">
+					<h2>主项目</h2>
+				</a>
+				<ul>
+					<li><code>NgDllPlugin</code> 参考<code>webpack</code>的<code>DllPlugin</code> 生成 dll</li>
+					<li><code>DllReferencePlugin</code> 引用 dll</li>
+				</ul>
+				<a href="#子项目" id="子项目" style="color: inherit; text-decoration: none;">
+					<h2>子项目</h2>
+				</a>
+				<ul>
+					<li><code>DllReferencePlugin</code> 引用 dll</li>
+				</ul>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class=" ">
+						<a href="modules.html">Exports</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-class">
+						<a href="classes/loadremotemoduleplugin.html" class="tsd-kind-icon">Load<wbr>Remote<wbr>Module<wbr>Plugin</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/ngdllplugin.html" class="tsd-kind-icon">Ng<wbr>Dll<wbr>Plugin</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/ngnamedexportmanifestplugin.html" class="tsd-kind-icon">Ng<wbr>Named<wbr>Export<wbr>Manifest<wbr>Plugin</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/ngnamedexportplugin.html" class="tsd-kind-icon">Ng<wbr>Named<wbr>Export<wbr>Plugin</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/ngnamedexportpluginmanifestoptions.html" class="tsd-kind-icon">Ng<wbr>Named<wbr>Export<wbr>Plugin<wbr>Manifest<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/ngnamedimportcheckplugin.html" class="tsd-kind-icon">Ng<wbr>Named<wbr>Import<wbr>Check<wbr>Plugin</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/remotemodulemanifeststartupmaintemplateplugin.html" class="tsd-kind-icon">Remote<wbr>Module<wbr>Manifest<wbr>Startup<wbr>Main<wbr>Template<wbr>Plugin</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/remotemodulestartupmaintemplateplugin.html" class="tsd-kind-icon">Remote<wbr>Module<wbr>Startup<wbr>Main<wbr>Template<wbr>Plugin</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/dependency.html" class="tsd-kind-icon">Dependency</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/module.html" class="tsd-kind-icon">Module</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/ngdllpluginoptions.html" class="tsd-kind-icon">Ng<wbr>Dll<wbr>Plugin<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/ngfilterpluginoptions.html" class="tsd-kind-icon">Ng<wbr>Filter<wbr>Plugin<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#cleanoutputfile" class="tsd-kind-icon">clean<wbr>Output<wbr>File</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#setngdllplugin" class="tsd-kind-icon">set<wbr>NgDll<wbr>Plugin</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
