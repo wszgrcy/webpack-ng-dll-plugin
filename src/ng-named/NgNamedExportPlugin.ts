@@ -5,6 +5,7 @@ import { Module } from '../types';
 import * as fs from 'fs-extra';
 import { mkdirp, dirname } from 'webpack/lib/util/fs';
 import { NormalModule } from 'webpack';
+import { getRuntime } from '../util/get-runtime';
 export class NgNamedExportPluginManifestOptions {
   /** 与LibManifestPlugin相同,资源文件生成的路径 */
   path: string;
@@ -32,8 +33,7 @@ export class NgNamedExportPlugin {
    */
   constructor(
     private exportFile: string,
-    private manifestOptions: NgNamedExportPluginManifestOptions,
-    private runtime = 'main'
+    private manifestOptions: NgNamedExportPluginManifestOptions
   ) {
     this.manifestOptions = {
       ...new NgNamedExportPluginManifestOptions(),
@@ -46,7 +46,7 @@ export class NgNamedExportPlugin {
       'NgNamedExportPlugin',
       (compilation: webpack.Compilation) => {
         const moduleGraph = compilation.moduleGraph;
-        let hooks =
+        const hooks =
           webpack.javascript.JavascriptModulesPlugin.getCompilationHooks(
             compilation
           );
@@ -111,7 +111,7 @@ export class NgNamedExportPlugin {
               }
 
               const exportsInfo = moduleGraph.getExportsInfo(module);
-              exportsInfo.setUsedInUnknownWay(this.runtime);
+              exportsInfo.setUsedInUnknownWay(getRuntime(compilation));
               moduleGraph.addExtraReason(
                 module,
                 NgNamedExportPluginExplanation

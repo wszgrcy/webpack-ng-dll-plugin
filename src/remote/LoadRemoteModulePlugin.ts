@@ -1,6 +1,6 @@
 import webpack from 'webpack';
+import { getRuntime } from '../util/get-runtime';
 const { ConcatSource } = require('webpack-sources');
-import { mergeRuntimeOwned, getEntryRuntime } from 'webpack/lib/util/runtime';
 /**
  * 普通模块转换为远程模块
  * 转换为由函数包裹的`JsonPCallback`方式,类似`webpack`的懒加载分包加载方式
@@ -48,13 +48,7 @@ export class LoadRemoteModulePlugin {
         compilation.hooks.finishModules.tap(
           'LoadRemoteModulePlugin',
           (modules) => {
-            let runtime;
-            for (const [name, { options }] of compilation.entries) {
-              runtime = mergeRuntimeOwned(
-                runtime,
-                getEntryRuntime(compilation, name, options)
-              );
-            }
+            let runtime = getRuntime(compilation);
             let entry = [...compilation.entries].find(([name]) =>
               this.entryNames.includes(name)
             )[1];

@@ -1,8 +1,7 @@
 import * as webpack from 'webpack';
-import { SyncWaterfallHook } from 'tapable';
-
 import DllEntryPlugin from 'webpack/lib/DllEntryPlugin';
 import LibManifestPlugin from 'webpack/lib/LibManifestPlugin';
+import { getRuntime } from './util/get-runtime';
 export interface NgDllPluginOptions {
   /** 模块是否会在dll中生成的相关配置 */
   filter?: NgFilterPluginOptions;
@@ -46,9 +45,7 @@ export class NgDllPlugin {
       compiler
     );
 
-    new NgFilterPlugin(this.options.filter, this.options.runtime).apply(
-      compiler
-    );
+    new NgFilterPlugin(this.options.filter).apply(compiler);
   }
 }
 
@@ -68,10 +65,8 @@ export interface NgFilterPluginOptions {
 class NgFilterPlugin {
   explanation = 'NgFilterPlugin';
   unCompressMap: Map<string, string[]> = new Map();
-  constructor(
-    private options: NgFilterPluginOptions = { mode: 'full' },
-    private runtime: string = 'main'
-  ) {
+
+  constructor(private options: NgFilterPluginOptions = { mode: 'full' }) {
     // this.options.mode = this.options.mode || 'full';
     if (this.options.mode === 'filter') {
       if (!this.options.filter) {
@@ -91,6 +86,7 @@ class NgFilterPlugin {
         });
     });
     compiler.hooks.thisCompilation.tap('NgFilterPlugin', (compilation) => {
+      let runtime = getRuntime(compilation);
       const moduleGraph = compilation.moduleGraph;
 
       compilation.hooks.renderManifest.tap(
@@ -108,7 +104,7 @@ class NgFilterPlugin {
               (modules as any).delete(module);
               continue;
             }
-            if (!moduleGraph.getUsedExports(module, this.runtime)) {
+            if (!moduleGraph.getUsedExports(module, runtime)) {
               (modules as any).delete(module);
             }
           }
@@ -124,7 +120,7 @@ class NgFilterPlugin {
               case 'full':
                 const exportsInfo = moduleGraph.getExportsInfo(module);
                 exportsInfo.setHasUseInfo();
-                exportsInfo.setUsedInUnknownWay(this.runtime);
+                exportsInfo.setUsedInUnknownWay(runtime);
                 moduleGraph.addExtraReason(module, this.explanation);
                 if (module.factoryMeta === undefined) {
                   module.factoryMeta = {};
@@ -138,7 +134,7 @@ class NgFilterPlugin {
                   };
                   const exportsInfo = moduleGraph.getExportsInfo(module);
                   exportsInfo.setHasUseInfo();
-                  exportsInfo.setUsedInUnknownWay(this.runtime);
+                  exportsInfo.setUsedInUnknownWay(runtime);
                   moduleGraph.addExtraReason(module, this.explanation);
                   if (module.factoryMeta === undefined) {
                     module.factoryMeta = {};
