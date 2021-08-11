@@ -1,6 +1,6 @@
 import webpack from 'webpack';
 import { getRuntime } from '../util/get-runtime';
-const { ConcatSource } = require('webpack-sources');
+import { ConcatSource } from 'webpack-sources';
 /**
  * 普通模块转换为远程模块
  * 转换为由函数包裹的`JsonPCallback`方式,类似`webpack`的懒加载分包加载方式
@@ -38,11 +38,11 @@ export class LoadRemoteModulePlugin {
             );
             this.moduleName = this.exportName || pathAndInfo.path;
             return new ConcatSource(
-              source,
+              source as any,
               `;loadRemoteModuleJsonpCallback('${this.moduleName}',`,
               `__webpack_exports__`,
               `);`
-            );
+            ) as any;
           }
         );
         compilation.hooks.finishModules.tap(
