@@ -22,31 +22,28 @@ export class WaitAssetUtilPlugin {
       this.options.files.forEach((item) => {
         compilation.fileDependencies.add(item.filePath);
       });
-      compilation.hooks.processAssets.tapAsync(
-        'WaitAssetUtilPlugin',
-        (compilationAssets, cb) => {
-          this.fileAllExist(this.options.files, compilation).then((result) => {
-            if (result.status) {
-              cb();
-            } else {
-              compilation.logger.warn('file not all exist!');
-              cb();
-            }
-          });
-        }
-      );
     });
+    compiler.hooks.beforeCompile.tapAsync(
+      'WaitAssetUtilPlugin',
+      (params, cb) => {
+        this.fileAllExist(this.options.files, compiler).then((result) => {
+          if (result.status) {
+            cb();
+          } else {
+            console.warn('file not all exist!');
+            cb();
+          }
+        });
+      }
+    );
   }
 
-  fileAllExist(
-    files: WaitAssetUtilFileOptions[],
-    compilation: webpack.Compilation
-  ) {
-    return this._fileAllExist(files, compilation, Date.now());
+  fileAllExist(files: WaitAssetUtilFileOptions[], compiler: webpack.Compiler) {
+    return this._fileAllExist(files, compiler, Date.now());
   }
   private async _fileAllExist(
     files: WaitAssetUtilFileOptions[],
-    compilation: webpack.Compilation,
+    compiler: webpack.Compiler,
     startTime: number
   ): Promise<{ status: boolean }> {
     let promiseList: WaitAssetUtilFileOptions[] = [];
@@ -57,7 +54,7 @@ export class WaitAssetUtilPlugin {
           Parameters<webpack.Compilation['inputFileSystem']['stat']>[1]
         >[1]
       >((res, rej) => {
-        compilation.inputFileSystem.stat(file.filePath, (err, result) => {
+        compiler.inputFileSystem.stat(file.filePath, (err, result) => {
           if (result) {
             res(result);
           } else if (err) {
@@ -78,7 +75,7 @@ export class WaitAssetUtilPlugin {
           promiseList.push(file);
         })
         .then(() => {
-          compilation.inputFileSystem.purge(file.filePath);
+          compiler.inputFileSystem.purge(file.filePath);
         });
       await promise;
     }
@@ -104,7 +101,7 @@ export class WaitAssetUtilPlugin {
         res = result;
       });
       setTimeout(() => {
-        res(this._fileAllExist(promiseList, compilation, startTime));
+        res(this._fileAllExist(promiseList, compiler, startTime));
       }, this.options.intervalTime);
       return resultPromise;
     } else {
