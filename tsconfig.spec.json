@@ -1,6 +1,6 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {},
-  "exclude": ["./src"],
-  "include": ["**/*.spec.ts"]
+  "include": ["src/**/*.spec.ts"],
+  "exclude": []
 }
