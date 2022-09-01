@@ -1,6 +1,6 @@
 {
   "name": "webpack-ng-dll-plugin",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "description": "ng远程加载插件库",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
