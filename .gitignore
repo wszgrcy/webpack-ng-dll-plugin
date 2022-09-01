@@ -6,3 +6,5 @@ coverage
 docs
 yarn-error.log
 .vscode
+*.log
+.nyc_output
